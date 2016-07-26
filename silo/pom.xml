@@ -165,6 +165,11 @@
 		        <id>matsim</id>
 		        <url>http://dl.bintray.com/matsim/matsim</url>
 		</repository>
+		<repository>
+			<id>bintray-joem34-maven</id>
+			<name>bintray</name>
+			<url>http://dl.bintray.com/joem34/maven</url>
+		</repository>
 	</repositories>
 
 	<profiles>
@@ -272,21 +277,17 @@
 		<dependency>
 			<groupId>common-base</groupId>
 			<artifactId>common-base</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
+			<version>0.0.3</version>
 		</dependency>
   		<dependency>
   			<groupId>sawdust</groupId>
   			<artifactId>sawdust</artifactId>
-  			<scope>system</scope>
   			<version>1</version>
-  			<systemPath>${basedir}/../third-party/sawdust-util-1.0.jar</systemPath>
   		</dependency>
   		<dependency>
   			<groupId>omx</groupId>
   			<artifactId>omx</artifactId>
-  			<scope>system</scope>
   			<version>1</version>
-  			<systemPath>${basedir}/../third-party/omx.jar</systemPath>
   		</dependency>
 	</dependencies>
 	<properties>

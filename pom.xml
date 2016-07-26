@@ -8,6 +8,5 @@
 	<name>SILO-All</name>
 	<modules>
 		<module>silo</module>
-		<module>third-party</module>
 	</modules>
 </project>
