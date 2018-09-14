@@ -2,10 +2,10 @@ package de.tum.bgu.msm.models.autoOwnership.maryland;
 
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.models.AbstractModel;
+import de.tum.bgu.msm.models.accessibility.Accessibility;
 import de.tum.bgu.msm.models.autoOwnership.UpdateCarOwnershipModel;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.SiloUtil;
-import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.Dwelling;
 import de.tum.bgu.msm.data.Household;
 import org.apache.log4j.Logger;

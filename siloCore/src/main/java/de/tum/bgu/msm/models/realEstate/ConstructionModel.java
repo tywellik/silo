@@ -9,6 +9,7 @@ import de.tum.bgu.msm.data.munich.MunichZone;
 import de.tum.bgu.msm.events.MicroEventModel;
 import de.tum.bgu.msm.events.impls.realEstate.ConstructionEvent;
 import de.tum.bgu.msm.models.AbstractModel;
+import de.tum.bgu.msm.models.accessibility.Accessibility;
 import de.tum.bgu.msm.models.relocation.MovesModelI;
 import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;

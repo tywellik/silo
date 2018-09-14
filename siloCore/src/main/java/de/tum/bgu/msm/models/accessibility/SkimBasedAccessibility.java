@@ -1,4 +1,4 @@
-package de.tum.bgu.msm.data;
+package de.tum.bgu.msm.models.accessibility;
 
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
@@ -7,6 +7,11 @@ import com.pb.common.datafile.TableDataSet;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.SiloUtil;
+import de.tum.bgu.msm.data.GeoData;
+import de.tum.bgu.msm.data.Location;
+import de.tum.bgu.msm.data.Region;
+import de.tum.bgu.msm.data.SummarizeData;
+import de.tum.bgu.msm.data.Zone;
 import de.tum.bgu.msm.data.travelTimes.SkimTravelTimes;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.util.matrices.Matrices;
@@ -21,9 +26,9 @@ import java.util.Collection;
  * Created on 12 December 2012 in Santa Fe
  **/
 
-public class Accessibility {
+public class SkimBasedAccessibility implements Accessibility {
 
-    private static final Logger LOGGER = Logger.getLogger(Accessibility.class);
+    private static final Logger LOGGER = Logger.getLogger(SkimBasedAccessibility.class);
     private static final double TIME_OF_DAY = 8 * 60. * 60.;
 
     private final GeoData geoData;
@@ -43,7 +48,7 @@ public class Accessibility {
 
     private float[] workTLFD;
 
-    public Accessibility(SiloDataContainer dataContainer) {
+    public SkimBasedAccessibility(SiloDataContainer dataContainer) {
         this.geoData = dataContainer.getGeoData();
         this.dataContainer = dataContainer;
 
@@ -192,16 +197,19 @@ public class Accessibility {
         return matrix;
     }
 
+    @Override
     public double getAutoAccessibilityForZone(int zone) {
     	// Can be combined with getTransitAccessibilityForZone into one method which get the mode
     	// as an argument, nk/dz, july'18
         return this.autoAccessibilities.getQuick(zone);
     }
-
+    
+    @Override
     public double getTransitAccessibilityForZone(int zoneId) {
         return this.transitAccessibilities.getQuick(zoneId);
     }
 
+    @Override
     public double getRegionalAccessibility(int region) {
         return regionalAccessibilities.getQuick(region);
     }

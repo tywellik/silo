@@ -5,6 +5,7 @@ import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.*;
 import de.tum.bgu.msm.events.impls.household.MoveEvent;
 import de.tum.bgu.msm.models.AbstractModel;
+import de.tum.bgu.msm.models.accessibility.Accessibility;
 import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 

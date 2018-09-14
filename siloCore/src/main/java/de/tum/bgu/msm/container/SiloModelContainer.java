@@ -1,8 +1,10 @@
 package de.tum.bgu.msm.container;
 
 import de.tum.bgu.msm.SiloModel;
-import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.munich.GeoDataMuc;
+import de.tum.bgu.msm.models.accessibility.Accessibility;
+import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
+//import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.models.autoOwnership.UpdateCarOwnershipModel;
 import de.tum.bgu.msm.models.autoOwnership.maryland.MaryLandUpdateCarOwnershipModel;
 import de.tum.bgu.msm.models.autoOwnership.munich.CreateCarOwnershipModel;
@@ -130,13 +132,15 @@ public class SiloModelContainer {
         boolean runTravelDemandModel = Properties.get().transportModel.runTravelDemandModel;
 
         TransportModelI transportModel;
+        Accessibility accesibility;
         if (runMatsim && (runTravelDemandModel || Properties.get().main.createMstmOutput)) {
             throw new RuntimeException("trying to run both MATSim and MSTM is inconsistent at this point.");
         }
         if (runMatsim) {
             LOGGER.info("  MATSim is used as the transport model");
             MatsimTransportModel tmpModel = new MatsimTransportModel(dataContainer, matsimConfig);
-            transportModel = tmpModel ;
+            transportModel = tmpModel;
+            accesibility = new SkimBasedAccessibility(dataContainer); // TODO change to new MATSimAccessibility
         } else {
             if (runTravelDemandModel) {
                 LOGGER.info("  MITO is used as the transport model");
@@ -145,9 +149,8 @@ public class SiloModelContainer {
                 LOGGER.info(" No transport model is used");
                 transportModel = null;
             }
+            accesibility = new SkimBasedAccessibility(dataContainer);
         }
-
-        Accessibility acc = new Accessibility(dataContainer);
 
         DeathModel death = new DeathModel(dataContainer);
         BirthModel birth = new BirthModel(dataContainer);
@@ -167,21 +170,21 @@ public class SiloModelContainer {
         SwitchToAutonomousVehicleModel switchToAutonomousVehicleModel = null;
         switch (Properties.get().main.implementation) {
             case MARYLAND:
-                updateCarOwnershipModel = new MaryLandUpdateCarOwnershipModel(dataContainer, acc);
-                move = new MovesModelMstm(dataContainer, acc);
+                updateCarOwnershipModel = new MaryLandUpdateCarOwnershipModel(dataContainer, accesibility);
+                move = new MovesModelMstm(dataContainer, accesibility);
                 break;
             case MUNICH:
                 createCarOwnershipModel = new CreateCarOwnershipModel(dataContainer,
                         (GeoDataMuc)dataContainer.getGeoData());
                 updateCarOwnershipModel = new MunichUpdateCarOwnerShipModel(dataContainer);
                 switchToAutonomousVehicleModel = new SwitchToAutonomousVehicleModel(dataContainer);
-                move = new MovesModelMuc(dataContainer, acc);
+                move = new MovesModelMuc(dataContainer, accesibility);
                 break;
             default:
                 throw new RuntimeException("Models not defined for implementation " + Properties.get().main.implementation);
         }
-        ConstructionModel cons = new ConstructionModel(dataContainer, move, acc);
-        EmploymentModel changeEmployment = new EmploymentModel(dataContainer, acc);
+        ConstructionModel cons = new ConstructionModel(dataContainer, move, accesibility);
+        EmploymentModel changeEmployment = new EmploymentModel(dataContainer, accesibility);
         updateCarOwnershipModel.initialize();
         LeaveParentHhModel lph = new LeaveParentHhModel(dataContainer, move, createCarOwnershipModel);
         InOutMigration iomig = new InOutMigration(dataContainer, changeEmployment, move, createCarOwnershipModel, driversLicense);
@@ -191,7 +194,7 @@ public class SiloModelContainer {
         DivorceModel divorce = new DivorceModel(dataContainer, move, createCarOwnershipModel);
 
         return new SiloModelContainer(iomig, cons, ddOverwrite, renov, demol,
-                prm, birth, birthday, death, marriage, divorce, lph, move, changeEmployment, changeSchoolUniv, driversLicense, acc,
+                prm, birth, birthday, death, marriage, divorce, lph, move, changeEmployment, changeSchoolUniv, driversLicense, accesibility,
                 updateCarOwnershipModel, updateJobs, createCarOwnershipModel, switchToAutonomousVehicleModel, transportModel);
     }
 

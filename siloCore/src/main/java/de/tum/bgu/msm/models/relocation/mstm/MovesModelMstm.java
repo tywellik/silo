@@ -12,6 +12,8 @@ import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.*;
 import de.tum.bgu.msm.data.maryland.MstmRegion;
+import de.tum.bgu.msm.models.accessibility.Accessibility;
+import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.models.relocation.AbstractDefaultMovesModel;
 import de.tum.bgu.msm.models.relocation.SelectDwellingJSCalculator;
 import de.tum.bgu.msm.models.relocation.SelectRegionJSCalculator;
@@ -201,7 +203,7 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
                 for (Zone workZone : workZones) {
                     int timeFromZoneToRegion = (int) dataContainer.getTravelTimes().getTravelTimeToRegion(
                     		workZone, region, Properties.get().main.peakHour, TransportMode.car);
-                    thisRegionFactor = thisRegionFactor * accessibility.getCommutingTimeProbability(timeFromZoneToRegion);
+                    thisRegionFactor = thisRegionFactor * ((SkimBasedAccessibility) accessibility).getCommutingTimeProbability(timeFromZoneToRegion);
                 }
             }
             utilitiesForThisHousheold.put(region.getId(),utilitiesForThisHousheold.get(region.getId())*thisRegionFactor);

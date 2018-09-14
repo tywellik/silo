@@ -9,6 +9,7 @@ import de.tum.bgu.msm.data.*;
 import de.tum.bgu.msm.data.maryland.GeoDataMstm;
 import de.tum.bgu.msm.data.maryland.MstmZone;
 import de.tum.bgu.msm.data.travelTimes.SkimTravelTimes;
+import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.models.autoOwnership.maryland.MaryLandUpdateCarOwnershipModel;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.syntheticPopulationGenerator.SyntheticPopI;
@@ -55,7 +56,7 @@ public class SyntheticPopUs implements SyntheticPopI {
 
     private ResourceBundle rb;
     private GeoDataMstm geoData;
-    private Accessibility accessibility;
+    private SkimBasedAccessibility accessibility;
     private RealEstateDataManager realEstateDataManager;
     private HouseholdDataManager householdDataManager;
     private JobDataManager jobData;
@@ -82,7 +83,7 @@ public class SyntheticPopUs implements SyntheticPopI {
         geoData = (GeoDataMstm) dataContainer.getGeoData();
         geoData.readData();
         travelTimes = new SkimTravelTimes();
-        accessibility = new Accessibility(dataContainer);                        // read in travel times and trip length frequency distribution
+        accessibility = new SkimBasedAccessibility(dataContainer);                        // read in travel times and trip length frequency distribution
 
         final String transitSkimFile = Properties.get().accessibility.transitSkimFile(Properties.get().main.startYear);
         travelTimes.readSkim(TransportMode.pt, transitSkimFile,

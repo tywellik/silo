@@ -7,6 +7,8 @@ import de.tum.bgu.msm.events.IssueCounter;
 import de.tum.bgu.msm.events.MicroEventModel;
 import de.tum.bgu.msm.events.impls.person.EmploymentEvent;
 import de.tum.bgu.msm.models.AbstractModel;
+import de.tum.bgu.msm.models.accessibility.Accessibility;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

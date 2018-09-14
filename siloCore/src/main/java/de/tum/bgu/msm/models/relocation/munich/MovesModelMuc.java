@@ -10,6 +10,8 @@ import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.models.accessibility.Accessibility;
+import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.models.relocation.AbstractDefaultMovesModel;
 import de.tum.bgu.msm.models.relocation.SelectDwellingJSCalculator;
 import de.tum.bgu.msm.models.relocation.SelectRegionJSCalculator;
@@ -38,13 +40,10 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
 
     private void calculateShareOfForeignersByZoneAndRegion() {
 
-        final DoubleMatrix1D zonalShare = Matrices.doubleMatrix1D(geoData.getZones().values());
-        zonalShare.assign(0);
-        final DoubleMatrix1D hhByZone = zonalShare.copy();
 
+        final DoubleMatrix1D hhByZone = Matrices.doubleMatrix1D(geoData.getZones().values());
         regionalShareForeigners.assign(0);
         hhByRegion.assign(0);
-
         for (Household hh: dataContainer.getHouseholdData().getHouseholds()) {
             int zone = -1;
             Dwelling dwelling = dataContainer.getRealEstateData().getDwelling(hh.getDwellingId());
@@ -55,18 +54,9 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
             hhByZone.setQuick(zone, hhByZone.getQuick(zone) + 1);
             hhByRegion.setQuick(region, hhByRegion.getQuick(region) + 1);
             if (hh.getNationality() != Nationality.GERMAN) {
-                zonalShare.setQuick(zone, zonalShare.getQuick(zone)+1);
-                regionalShareForeigners.setQuick(region, zonalShare.getQuick(region)+1);
+                regionalShareForeigners.setQuick(region, regionalShareForeigners.getQuick(region)+1);
             }
         }
-
-        zonalShare.assign(hhByZone, (foreignerShare, numberOfHouseholds) -> {
-            if (numberOfHouseholds > 0) {
-                return foreignerShare / numberOfHouseholds;
-            } else {
-                return 0;
-            }
-        });
 
         regionalShareForeigners.assign(hhByRegion, (foreignerShare, numberOfHouseholds) -> {
             if (numberOfHouseholds > 0) {
@@ -155,7 +145,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
                 for (Zone workZone : workZones) {
                     int timeFromZoneToRegion = (int) dataContainer.getTravelTimes().getTravelTimeToRegion(
                     		workZone, region, Properties.get().main.peakHour, TransportMode.car);
-                    thisRegionFactor = thisRegionFactor * accessibility.getCommutingTimeProbability(timeFromZoneToRegion);
+                    thisRegionFactor = thisRegionFactor * ((SkimBasedAccessibility) accessibility).getCommutingTimeProbability(timeFromZoneToRegion);
                 }
             }
             utilitiesForThisHousheold.put(region.getId(),utilitiesForThisHousheold.get(region.getId())*thisRegionFactor);
@@ -300,7 +290,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         }
         double workDistanceUtility = 1;
         for (Location workLocation : workerZonesForThisHousehold.values()){
-        	double factorForThisZone = accessibility.getCommutingTimeProbability(Math.max(1,(int) dataContainer.getTravelTimes().getTravelTime(
+        	double factorForThisZone = ((SkimBasedAccessibility) accessibility).getCommutingTimeProbability(Math.max(1,(int) dataContainer.getTravelTimes().getTravelTime(
             		dd.getLocation(), workLocation, Properties.get().main.peakHour, TransportMode.car)));
             workDistanceUtility *= factorForThisZone;
         }
