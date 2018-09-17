@@ -30,6 +30,7 @@ import de.tum.bgu.msm.events.impls.person.*;
 import de.tum.bgu.msm.events.impls.realEstate.ConstructionEvent;
 import de.tum.bgu.msm.events.impls.realEstate.DemolitionEvent;
 import de.tum.bgu.msm.events.impls.realEstate.RenovationEvent;
+import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.utils.SkimUtil;
 import de.tum.bgu.msm.utils.TimeTracker;
@@ -110,7 +111,7 @@ public final class SiloModel {
     }
 
     private void setupTravelTimes() {
-		if(Properties.get().transportModel.runMatsim) {
+		if (Properties.get().transportModel.runMatsim) {
 			modelContainer.getTransportModel().runTransportModel(Properties.get().main.startYear);
 		} else {
 			updateTravelTimes(Properties.get().main.startYear);
@@ -127,8 +128,11 @@ public final class SiloModel {
 	}
 
     private void setupAccessibility() {
-        modelContainer.getAcc().initialize();
-        modelContainer.getAcc().calculateHansenAccessibilities(Properties.get().main.startYear);
+    	if (!Properties.get().transportModel.runMatsim) {
+    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
+    		accessibility.initialize();
+    		accessibility.calculateHansenAccessibilities(Properties.get().main.startYear);
+    	}
     }
 
 	private void setupYears() {
@@ -223,7 +227,10 @@ public final class SiloModel {
                     !Properties.get().transportModel.runMatsim) {
                     updateTravelTimes(year);
             }
-			modelContainer.getAcc().calculateHansenAccessibilities(year);
+			if (!Properties.get().transportModel.runMatsim) {
+	    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
+	    		accessibility.calculateHansenAccessibilities(year);
+			}
 			timeTracker.record("calcAccessibilities");
 
             timeTracker.reset();
@@ -269,7 +276,10 @@ public final class SiloModel {
                     modelContainer.getTransportModel().runTransportModel(year + 1);
 					timeTracker.record("transportModel");
 					timeTracker.reset();
-                    modelContainer.getAcc().calculateHansenAccessibilities(year + 1);
+					if (!Properties.get().transportModel.runMatsim) {
+			    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
+			    		accessibility.calculateHansenAccessibilities(year + 1);
+					}
 					timeTracker.record("calcAccessibilities");
                 }
             }

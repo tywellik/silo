@@ -8,6 +8,7 @@ import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import de.tum.bgu.msm.data.SummarizeData;
 import de.tum.bgu.msm.events.MicroSimulation;
+import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.utils.CblcmDiffGenerator;
 import de.tum.bgu.msm.utils.TimeTracker;
@@ -65,7 +66,8 @@ public class SiloModelCBLCM {
 
 		SkimUtil.updateCarSkim((SkimTravelTimes) data.getTravelTimes(), currentYear, Properties.get());
 		SkimUtil.updateTransitSkim((SkimTravelTimes) data.getTravelTimes(), currentYear, Properties.get());
-		modelContainer.getAcc().initialize();
+		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
+		accessibility.initialize();
 
 	        trackTime = Properties.get().main.trackTime;
 	        IssueCounter.logIssues(geoData);           // log any potential issues during initial setup
@@ -108,7 +110,8 @@ public class SiloModelCBLCM {
                             currentYear, Properties.get());
 	                SkimUtil.updateTransitSkim((SkimTravelTimes) data.getTravelTimes(),
                             currentYear, Properties.get());
-	                modelContainer.getAcc().calculateHansenAccessibilities(currentYear);
+	                SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
+	                accessibility.calculateHansenAccessibilities(currentYear);
 	            }
 	        }
 
