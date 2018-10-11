@@ -18,12 +18,13 @@
  * *********************************************************************** */
 package de.tum.bgu.msm.models.transportModel.matsim;
 
-//import Implementation;
+import java.io.File;
+import java.util.Map;
+import java.util.Objects;
 
-import de.tum.bgu.msm.container.SiloDataContainer;
-import de.tum.bgu.msm.properties.Properties;
-import de.tum.bgu.msm.models.transportModel.TransportModelI;
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.core.api.internal.MatsimWriter;
@@ -33,10 +34,22 @@ import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.facilities.ActivityFacilities;
+import org.matsim.facilities.ActivityFacilitiesFactory;
+import org.matsim.facilities.ActivityFacilitiesFactoryImpl;
+import org.matsim.facilities.ActivityFacility;
+import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
 
-import java.io.File;
-import java.util.Objects;
+import com.vividsolutions.jts.geom.Geometry;
+
+//import Implementation;
+
+import de.tum.bgu.msm.container.SiloDataContainer;
+import de.tum.bgu.msm.data.Zone;
+import de.tum.bgu.msm.models.transportModel.TransportModelI;
+import de.tum.bgu.msm.properties.Properties;
 
 //import GeoDataMuc;
 //import de.tum.bgu.msm.data.travelTimes.TravelTimes;
@@ -58,12 +71,27 @@ public final class MatsimTransportModel implements TransportModelI  {
 	private final MatsimTravelTimes travelTimes;
 //	private TripRouter tripRouter = null;
 	private final SiloDataContainer dataContainer;
+	private ActivityFacilities zoneCentroids = FacilitiesUtils.createActivityFacilities();
 	
 	
 	public MatsimTransportModel(SiloDataContainer dataContainer, Config matsimConfig) {
 		this.dataContainer = Objects.requireNonNull(dataContainer);
 		this.initialMatsimConfig = Objects.requireNonNull(matsimConfig );
 		this.travelTimes = (MatsimTravelTimes) Objects.requireNonNull(dataContainer.getTravelTimes());
+		
+		createZoneCentroidMap();
+	}
+
+	private void createZoneCentroidMap() {
+		
+		ActivityFacilitiesFactory aff = new ActivityFacilitiesFactoryImpl();
+		Map<Integer, Zone> zoneMap = dataContainer.getGeoData().getZones();
+		for (int zoneId : zoneMap.keySet()) {
+			Geometry geometry = (Geometry) zoneMap.get(zoneId).getZoneFeature().getDefaultGeometry();
+			Coord centroid = CoordUtils.createCoord(geometry.getCentroid().getX(), geometry.getCentroid().getY());
+			ActivityFacility activityFacility = aff.createActivityFacility(Id.create(zoneId, ActivityFacility.class), centroid);
+			zoneCentroids.addActivityFacility(activityFacility);
+		}
 	}
 
 	@Override
@@ -98,8 +126,8 @@ public final class MatsimTransportModel implements TransportModelI  {
 //		}
 		
 		String matsimRunId = scenarioName + "_" + year;
-		
-		Config config = SiloMatsimUtils.createMatsimConfig(initialMatsimConfig, matsimRunId, populationScalingFactor, workerScalingFactor);
+
+		Config config = SiloMatsimUtils.createMatsimConfig(initialMatsimConfig, matsimRunId, populationScalingFactor, workerScalingFactor, zoneCentroids);
 		
 //		Population population = SiloMatsimUtils.createMatsimPopulation(config, dataContainer, zoneFeatureMap, populationScalingFactor * workerScalingFactor);
 		Population population = SiloMatsimUtils.createMatsimPopulation(config, dataContainer, populationScalingFactor * workerScalingFactor);
@@ -116,14 +144,25 @@ public final class MatsimTransportModel implements TransportModelI  {
 		MutableScenario scenario = (MutableScenario) ScenarioUtils.loadScenario(config);
 		scenario.setPopulation(population);
 		
-		final Controler controler = new Controler(scenario);
+//		final Controler controler = new Controler(scenario);
+		Controler controler = new Controler(scenario);
+		
+//		// new
+////		for (String activityType : activityTypes) {
+//			AccessibilityModule module = new AccessibilityModule();
+//			module.setConsideredActivityType("populationFacility");
+////			module.addAdditionalFacilityData(densityFacilities);
+////			module.setPushing2Geoserver(push2Geoserver);
+//			controler.addOverridingModule(module);
+////		}
+//		// end new
+				
 		
 		controler.run();
 		LOG.warn("Running MATSim transport model for year " + year + " finished.");
 		
 		TravelTime travelTime = controler.getLinkTravelTimes();
 		TravelDisutility travelDisutility = controler.getTravelDisutilityFactory().createTravelDisutility(travelTime);
-//		
 		LeastCostPathTree leastCoastPathTree = new LeastCostPathTree(travelTime, travelDisutility);
 //		
 ////		travelTimes.update(leastCoastPathTree, zoneFeatureMap, scenario.getNetwork(), controler.getTripRouterProvider().get() );
