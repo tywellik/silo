@@ -23,6 +23,7 @@ import org.matsim.core.config.groups.VspExperimentalConfigGroup.VspDefaultsCheck
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.utils.collections.Tuple;
+import org.matsim.facilities.ActivityFacilities;
 
 import java.util.Collection;
 import java.util.Map;
@@ -37,7 +38,8 @@ public class SiloMatsimUtils {
 	
 	private final static GeometryFactory geometryFactory = new GeometryFactory();
 	
-	public static Config createMatsimConfig(Config initialConfig, String runId, double populationScalingFactor, double workerScalingFactor) {
+	public static Config createMatsimConfig(Config initialConfig, String runId, double populationScalingFactor, 
+			double workerScalingFactor, ActivityFacilities zoneCentroids) {
 		LOG.info("Stating creating a MATSim config.");
 		Config config = ConfigUtils.loadConfig(initialConfig.getContext());
 		config.qsim().setFlowCapFactor(populationScalingFactor);
@@ -86,9 +88,9 @@ public class SiloMatsimUtils {
 		config.parallelEventHandling().setNumberOfThreads(1);
 		config.qsim().setUsingThreadpool(false);
 		
-		// TODO is this required?
 		AccessibilityConfigGroup accessibilityConfigGroup = ConfigUtils.addOrGetModule(config, AccessibilityConfigGroup.GROUP_NAME, AccessibilityConfigGroup.class);
-		double timeOfDay = accessibilityConfigGroup.getTimeOfDay();
+//		accessibilityConfigGroup.setMeasuringPointsFacilities(zoneCentroids); // TODO
+//		double timeOfDay = accessibilityConfigGroup.getTimeOfDay();
 		
 		config.vspExperimental().setVspDefaultsCheckingLevel(VspDefaultsCheckingLevel.warn);
 	
