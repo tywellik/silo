@@ -2,7 +2,7 @@ package de.tum.bgu.msm.models.demography;
 
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
-import de.tum.bgu.msm.data.Accessibility;
+import de.tum.bgu.msm.models.accessibility.Accessibility;
 import de.tum.bgu.msm.data.household.Household;
 import de.tum.bgu.msm.data.person.Occupation;
 import de.tum.bgu.msm.data.Zone;
@@ -14,8 +14,6 @@ import de.tum.bgu.msm.events.IssueCounter;
 import de.tum.bgu.msm.events.MicroEventModel;
 import de.tum.bgu.msm.events.impls.person.EmploymentEvent;
 import de.tum.bgu.msm.models.AbstractModel;
-import de.tum.bgu.msm.models.accessibility.Accessibility;
-
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

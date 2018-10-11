@@ -94,7 +94,7 @@ public class JobDataManager {
     public void fillMitoZoneEmployees(Map<Integer, MitoZone> zones) {
 
         for (Job jj : jobs.values()) {
-            final MitoZone zone = zones.get(jj.determineZoneId());
+            final MitoZone zone = zones.get(jj.getZoneId());
             final String type = jj.getType().toUpperCase();
             try {
                 de.tum.bgu.msm.data.jobTypes.JobType mitoJobType = null;
@@ -300,7 +300,7 @@ public class JobDataManager {
             if (jj.getWorkerId() == -1) {
                 int jobId = jj.getId();
 
-                int region = geoData.getZones().get(jj.determineZoneId()).getRegion().getId();
+                int region = geoData.getZones().get(jj.getZoneId()).getRegion().getId();
                 if (vacantJobsByRegionPos[region] < numberOfStoredVacantJobs) {
                     vacantJobsByRegion[region][vacantJobsByRegionPos[region]] = jobId;
                     vacantJobsByRegionPos[region]++;
@@ -323,7 +323,7 @@ public class JobDataManager {
         final int workplace = person.getWorkplace();
         Job jb = jobs.get(workplace);
         if (makeJobAvailableToOthers) {
-            addJobToVacancyList(jb.determineZoneId(), workplace);
+            addJobToVacancyList(jb.getZoneId(), workplace);
         }
         jb.setWorkerID(-1);
         person.setWorkplace(-1);
@@ -447,7 +447,7 @@ public class JobDataManager {
         final int highestId = regions.keySet().stream().mapToInt(Integer::intValue).max().getAsInt();
         int[][] jobsByTypeAndRegion = new int[JobType.getNumberOfJobTypes()][highestId + 1];
         for (Job job : jobs.values()) {
-            jobsByTypeAndRegion[JobType.getOrdinal(job.getType())][geoData.getZones().get(job.determineZoneId()).getRegion().getId()]++;
+            jobsByTypeAndRegion[JobType.getOrdinal(job.getType())][geoData.getZones().get(job.getZoneId()).getRegion().getId()]++;
         }
 
         for (int region : regions.keySet()) {
@@ -464,7 +464,7 @@ public class JobDataManager {
 
     public void calculateJobDensityByZone() {
         Multiset<Integer> counter = ConcurrentHashMultiset.create();
-        jobs.values().parallelStream().forEach(j -> counter.add(j.determineZoneId()));
+        jobs.values().parallelStream().forEach(j -> counter.add(j.getZoneId()));
         geoData.getZones().forEach((id, zone) -> zonalJobDensity.put(id, (double) (counter.count(id) / zone.getArea())));
     }
 

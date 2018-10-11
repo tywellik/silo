@@ -56,7 +56,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
             int zone = -1;
             Dwelling dwelling = dataContainer.getRealEstateData().getDwelling(hh.getDwellingId());
             if (dwelling != null) {
-                zone = dwelling.determineZoneId();
+                zone = dwelling.getZoneId();
             }
             final int region = geoData.getZones().get(zone).getRegion().getId();
             hhByZone.setQuick(zone, hhByZone.getQuick(zone) + 1);
@@ -180,7 +180,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         for (Person pp: household.getPersons().values()) {
         	// Are we sure that workplace must only not be -2? How about workplace = -1? nk/dz, july'18
             if (pp.getOccupation() == Occupation.EMPLOYED && pp.getWorkplace() != -2) {
-            	Zone workZone = geoData.getZones().get(jobData.getJobFromId(pp.getWorkplace()).determineZoneId());
+            	Zone workZone = geoData.getZones().get(jobData.getJobFromId(pp.getWorkplace()).getZoneId());
                 workerZonesForThisHousehold.put(pp, workZone);
                 householdIncome += pp.getIncome();
             }
@@ -243,8 +243,8 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         //todo debugging
 //        for(Person worker : workerZonesForThisHousehold.keySet()){
 //            pw.println(year + "," +
-//                    worker.getHh().getId() + "," +
-//                    worker.getId() + "," +
+//                    worker.getHh().getZoneId() + "," +
+//                    worker.getZoneId() + "," +
 //                    dataContainer.getJobData().getJobFromId(worker.getWorkplace()).getZone() + "," +
 //                    selectedRegionId  + "," +
 //                    accessibility.getMinTravelTimeFromZoneToRegion(dataContainer.getJobData().getJobFromId(worker.getWorkplace()).getZone(), selectedRegionId));
@@ -275,8 +275,8 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
     protected double calculateDwellingUtilityForHouseholdType(HouseholdType ht, Dwelling dd) {
         double ddQualityUtility = convertQualityToUtility(dd.getQuality());
         double ddSizeUtility = convertAreaToUtility(dd.getBedrooms());
-        double ddAutoAccessibilityUtility = convertAccessToUtility(accessibility.getAutoAccessibilityForZone(dd.determineZoneId()));
-        double transitAccessibilityUtility = convertAccessToUtility(accessibility.getTransitAccessibilityForZone(dd.determineZoneId()));
+        double ddAutoAccessibilityUtility = convertAccessToUtility(accessibility.getAutoAccessibilityForZone(dd.getZoneId()));
+        double transitAccessibilityUtility = convertAccessToUtility(accessibility.getTransitAccessibilityForZone(dd.getZoneId()));
         double ddPriceUtility = convertPriceToUtility(dd.getPrice(), ht);
         return dwellingUtilityJSCalculator.calculateSelectDwellingUtility(ht, ddSizeUtility, ddPriceUtility,
                 ddQualityUtility, ddAutoAccessibilityUtility,
@@ -295,14 +295,14 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         JobDataManager jobData = dataContainer.getJobData();
         for (Person pp: household.getPersons().values()) {
             if (pp.getOccupation() == Occupation.EMPLOYED && pp.getWorkplace() != -2) {
-            	Location workLocation = Objects.requireNonNull(jobData.getJobFromId(pp.getWorkplace()).getLocation());
+            	Location workLocation = Objects.requireNonNull(jobData.getJobFromId(pp.getWorkplace()));
                 workerZonesForThisHousehold.put(pp, workLocation);
             }
         }
         double workDistanceUtility = 1;
         for (Location workLocation : workerZonesForThisHousehold.values()){
         	double factorForThisZone = ((SkimBasedAccessibility) accessibility).getCommutingTimeProbability(Math.max(1,(int) dataContainer.getTravelTimes().getTravelTime(
-            		dd.getLocation(), workLocation, Properties.get().main.peakHour, TransportMode.car)));
+            		dd, workLocation, Properties.get().main.peakHour, TransportMode.car)));
             workDistanceUtility *= factorForThisZone;
         }
         return dwellingUtilityJSCalculator.personalizeUtility(ht, genericUtility, workDistanceUtility, travelCostUtility);
