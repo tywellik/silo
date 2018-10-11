@@ -4,11 +4,9 @@ import com.pb.common.datafile.CSVFileWriter;
 import com.pb.common.datafile.TableDataFileReader;
 import com.pb.common.datafile.TableDataSet;
 import com.pb.common.matrix.Matrix;
-import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import de.tum.bgu.msm.data.SummarizeData;
-import de.tum.bgu.msm.data.summarizeDataCblcm;
 import de.tum.bgu.msm.events.IssueCounter;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.properties.PropertiesUtil;
@@ -16,9 +14,11 @@ import de.tum.bgu.msm.utils.TableDataFileReader2;
 import de.tum.bgu.msm.utils.TimeTracker;
 import omx.OmxMatrix;
 import omx.hdf5.OmxHdf5Datatype;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -40,27 +40,27 @@ public class SiloUtil {
     public static int trackJj;
     public static PrintWriter trackWriter;
     private static ResourceBundle rb;
-    //todo remove rbHashMap when Maryland Car Ownership UEC is not used any more
-    private static HashMap rbHashMap;
 
-    static Logger logger = Logger.getLogger(SiloUtil.class);
+    private static Logger logger = Logger.getLogger(SiloUtil.class);
 
-    public static ResourceBundle siloInitialization(String resourceBundleNames, Implementation implementation) {
+    public static Properties siloInitialization(String resourceBundleNames, Implementation implementation) {
+
+        loadHdf5Lib();
+
         File propFile = new File(resourceBundleNames);
         try {
             rb = new PropertyResourceBundle(new FileReader(propFile));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Properties.initializeProperties(rb, implementation);
-        rbHashMap = ResourceUtil.changeResourceBundleIntoHashMap(rb);
+        Properties properties = Properties.initializeProperties(rb, implementation);
         SummarizeData.openResultFile(rb);
         SummarizeData.resultFileSpatial("open");
 
         // create scenarios output directory if it does not exist yet
-        createDirectoryIfNotExistingYet(Properties.get().main.baseDirectory + "scenOutput/" + Properties.get().main.scenarioName);
+        createDirectoryIfNotExistingYet(properties.main.baseDirectory + "scenOutput/" + properties.main.scenarioName);
 
-        PropertiesUtil.printOutPropertiesOfThisRun(Properties.get().main.baseDirectory + "/scenOutput/" + Properties.get().main.scenarioName);
+        PropertiesUtil.printOutPropertiesOfThisRun(properties.main.baseDirectory + "/scenOutput/" + properties.main.scenarioName);
         // copy properties file into scenarios directory
         String[] prop = resourceBundleNames.split("/");
 
@@ -68,18 +68,82 @@ public class SiloUtil {
         // I don't see how this can work.  resourceBundleNames[0] is already the full path name, so if you prepend "baseDirectory"
         // and it is not empty, the command cannot possibly work.  It may have worked by accident in the past if everybody
         // had the resourceBundle directly at the JVM file system root.  kai (and possibly already changed by dz before), aug'16
-        copyFile(resourceBundleNames, Properties.get().main.baseDirectory + "scenOutput/" + Properties.get().main.scenarioName + "/" + prop[prop.length-1]);
+        copyFile(resourceBundleNames, properties.main.baseDirectory + "scenOutput/" + properties.main.scenarioName + "/" + prop[prop.length-1]);
 
-        initializeRandomNumber(Properties.get().main.randomSeed);
+        initializeRandomNumber(properties.main.randomSeed);
         trackingFile("open");
-        return rb;
+        return properties;
     }
 
-
-    public static HashMap getRbHashMap() {
-        return rbHashMap;
+    private static void loadHdf5Lib() {
+        ClassLoader classLoader = SiloUtil.class.getClassLoader();
+        logger.info("Trying to set up native hdf5 lib");
+        String path = null;
+        if(SystemUtils.IS_OS_WINDOWS) {
+            logger.info("Detected windows OS.");
+            try {
+                path = classLoader.getResource("lib/win32/jhdf5.dll").getFile();
+                System.load(path);
+            } catch(Throwable e) {
+                logger.debug("Cannot load 32 bit library. Trying 64 bit next.");
+                try {
+                    path = classLoader.getResource("lib/win64/jhdf5.dll").getFile();
+                    System.load(path);
+                }  catch(Throwable e2) {
+                    logger.debug("Cannot load 64 bit library.");
+                    path = null;
+                }
+            }
+        } else if(SystemUtils.IS_OS_MAC) {
+            logger.info("Detected Mac OS.");
+            try {
+                path = classLoader.getResource("lib/macosx32/libjhdf5.jnilib").getFile();
+                System.load(path);
+            } catch(Throwable e) {
+                logger.debug("Cannot load 32 bit library. Trying 64 bit next.");
+                try {
+                    path = classLoader.getResource("lib/macosx64/libjhdf5.jnilib").getFile();
+                    System.load(path);
+                } catch(Throwable e2) {
+                    logger.debug("Cannot load 64 bit library.");
+                    path = null;
+                }
+            }
+        } else if(SystemUtils.IS_OS_LINUX) {
+            logger.info("Detected linux OS.");
+            try {
+                URL url = classLoader.getResource("lib/linux32/libjhdf5.so");
+                if(url == null) {
+                    logger.info("Could not find linux 32 lib");
+                } else {
+                    path = url.getFile();
+                    System.load(path);
+                }
+            } catch(Throwable e) {
+                logger.debug("Cannot load 32 bit library. Trying 64 bit next.");
+                try {
+                    URL url = classLoader.getResource("lib/linux64/libjhdf5.so");
+                    if(url == null) {
+                        logger.info("Could not find linux 64 lib");
+                    } else {
+                        path = url.getFile();
+                        System.load(path);
+                    }
+                } catch(Throwable e2) {
+                    logger.debug("Cannot load 64 bit library. ");
+                    path = null;
+                }
+            }
+        }
+        if(path != null) {
+            logger.info("Hdf5 library successfully located.");
+            System.setProperty("ncsa.hdf.hdf5lib.H5.hdf5lib", path);
+        } else {
+            logger.warn("Could not load native hdf5 library automatically." +
+                    " Any code involving omx matrices will only work if the " +
+                    "library was set up in java.library.path");
+        }
     }
-
 
     public static void createDirectoryIfNotExistingYet (String directory) {
         File file = new File (directory);
@@ -113,7 +177,7 @@ public class SiloUtil {
 
 
     public static int[] convertIntegerArrayListToArray (ArrayList<Integer> al) {
-        Integer[] temp = al.toArray(new Integer[al.size()]);
+        Integer[] temp = al.toArray(new Integer[0]);
         int[] list = new int[temp.length];
         for (int i = 0; i < temp.length; i++) list[i] = temp[i];
         return list;
@@ -121,37 +185,37 @@ public class SiloUtil {
 
 
     public static String[] convertStringArrayListToArray (ArrayList<String> al) {
-        String[] temp = al.toArray(new String[al.size()]);
+        String[] temp = al.toArray(new String[0]);
         String[] list = new String[temp.length];
         System.arraycopy(temp, 0, list, 0, temp.length);
         return list;
     }
 
-
-    public static int findPositionInArray (int element, int[] arr){
-        // return index position of element in array arr
-        int ind = -1;
-        for (int a = 0; a < arr.length; a++) if (arr[a] == element) ind = a;
-        if (ind == -1) logger.error ("Could not find element " + element +
-                " in array (see method <findPositionInArray> in class <SiloUtil>");
-        return ind;
-    }
-
-    public static int findPositionInArray (String element, String[] arr){
-        // return index position of element in array arr
-        int ind = -1;
-        for (int a = 0; a < arr.length; a++) if (arr[a].equalsIgnoreCase(element)) ind = a;
-        if (ind == -1) logger.error ("Could not find element " + element +
-                " in array (see method <findPositionInArray> in class <SiloUtil>");
-        return ind;
-    }
-
-
     public static <T> int findPositionInArray (T element, T array[]) {
         int ind = -1;
-        for (int a = 0; a < array.length; a++) if (array[a].equals(element)) ind = a;
-        if (ind == -1) logger.error ("Could not find element " + element +
-                " in array (see method <findPositionInArray> in class <SiloUtil>");
+        for (int a = 0; a < array.length; a++) {
+            if (array[a].equals(element)) {
+                ind = a;
+            }
+        }
+        if (ind == -1) {
+            logger.error ("Could not find element " + element +
+                    " in array (see method <findPositionInArray> in class <SiloUtil>");
+        }
+        return ind;
+    }
+
+    public static int findPositionInArray (String string, String[] array) {
+        int ind = -1;
+        for (int a = 0; a < array.length; a++) {
+            if (array[a].equalsIgnoreCase(string)) {
+                ind = a;
+            }
+        }
+        if (ind == -1) {
+            logger.error ("Could not find element " + string +
+                    " in array (see method <findPositionInArray> in class <SiloUtil>");
+        }
         return ind;
     }
 
@@ -271,21 +335,24 @@ public class SiloUtil {
         }
     }
 
-    //TODO REFACTOR SELECT METHODS TO USE GENERICS
+    @Deprecated
     public static int select (double[] probabilities) {
         // select item based on probabilities (for zero-based double array)
        return select(probabilities, getSum(probabilities), rand);
     }
 
+    @Deprecated
     public static int select(double[] probabilities, Random random) {
         return select(probabilities, getSum(probabilities), random);
     }
 
+    @Deprecated
     public static int select (double[] probabilities, double sumProb) {
         // select item based on probabilities (for zero-based double array)
         return select(probabilities, getSum(probabilities), rand);
     }
 
+    @Deprecated
     public static int select (double[] probabilities, double sumProb, Random random) {
         // select item based on probabilities (for zero-based double array)
         double selPos = sumProb * random.nextFloat();
@@ -299,6 +366,7 @@ public class SiloUtil {
         return probabilities.length - 1;
     }
 
+    @Deprecated
     public static int select (float[] probabilities) {
         // select item based on probabilities (for zero-based float array)
         float selPos = getSum(probabilities) * getRandomNumberAsFloat();
@@ -312,6 +380,7 @@ public class SiloUtil {
         return probabilities.length - 1;
     }
 
+    @Deprecated
     public static int select (double[] probabilities, int[] id) {
         // select item based on probabilities (for zero-based float array)
         double selPos = getSum(probabilities) * getRandomNumberAsFloat();
@@ -326,7 +395,7 @@ public class SiloUtil {
         return id[probabilities.length - 1];
     }
 
-
+    @Deprecated
     public static int select (float[] probabilities, int length, int[] name){
         //select item based on probabilities and return the name
         //probabilities and name have more items than the required (max number of required items is set on "length")
@@ -374,7 +443,7 @@ public class SiloUtil {
     public static double[] convertProbability (double[] probabilities){
         //method to return the probability in percentage
         double sum = 0;
-        for (int row = 0; row < probabilities.length; row++){
+        for (double probability : probabilities) {
             sum++;
         }
         for (int row = 0; row < probabilities.length; row++) {
@@ -974,7 +1043,7 @@ public class SiloUtil {
     }
 
 
-    public static void closeAllFiles (long startTime, ResourceBundle rbLandUse, de.tum.bgu.msm.properties.Properties properties) {
+    public static void closeAllFiles (long startTime, Properties properties) {
         // run this method whenever SILO closes, regardless of whether SILO completed successfully or SILO crashed
         trackingFile("close");
         SummarizeData.resultFile("close");
@@ -983,11 +1052,10 @@ public class SiloUtil {
         int hours = (int) (endTime / 60);
         int min = (int) (endTime - 60 * hours);
         logger.info("Runtime: " + hours + " hours and " + min + " minutes.");
-        if (Properties.get().main.trackTime) {
-            String fileName = Properties.get().main.trackTimeFile;
+        if (properties.main.trackTime) {
+            String fileName = properties.main.trackTimeFile;
             try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(fileName, true)))) {
                 out.println("Runtime: " + hours + " hours and " + min + " minutes.");
-                out.close();
             } catch (IOException e) {
                 logger.warn("Could not add run-time statement to time-tracking file.");
             }
@@ -1007,18 +1075,13 @@ public class SiloUtil {
             deleteFile (fileName);
         } else {
             TableDataSet status = readCSVfile(fileName);
-            if (!status.getStringValueAt(1, "Status").equalsIgnoreCase("continue")) {
-                return true;
-            }
+            return !status.getStringValueAt(1, "Status").equalsIgnoreCase("continue");
         }
         return false;
     }
 
 
     public static void summarizeMicroData (int year, SiloModelContainer modelContainer, SiloDataContainer dataContainer) {
-        // "static" so it can also be used from SiloModelCBLCM.  nico/kai/dominik, oct'17
-
-
         // aggregate micro data
 
         if (trackHh != -1 || trackPp != -1 || trackDd != -1)
@@ -1032,9 +1095,6 @@ public class SiloUtil {
 
         SummarizeData.resultFileSpatial("Year " + year, false);
         SummarizeData.summarizeSpatially(year, modelContainer, dataContainer);
-        if (Properties.get().cblcm.createCblcmFiles) {
-            summarizeDataCblcm.createCblcmSummaries(year, modelContainer, dataContainer);
-        }
         if (Properties.get().main.createHousingEnvironmentImpactFile) {
             SummarizeData.summarizeHousing(year, dataContainer);
         }

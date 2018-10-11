@@ -315,6 +315,12 @@
             <artifactId>junit-addons</artifactId>
             <version>1.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.5</version>
+            <scope>compile</scope>
+        </dependency>
         <!-- need the jxl dependency for the pb.common calculator, as it is requested at runtime -->
         <dependency>
             <groupId>jexcelapi</groupId>
@@ -358,7 +364,7 @@
         <svnRevision>${buildNumber}</svnRevision>
         <geotools.version>13.0</geotools.version>
         <skipTestJar>false</skipTestJar> <!--Overridden in the bintray profile-->
-        <matsimVersion>0.10.0-SNAPSHOT</matsimVersion>
+        <matsimVersion>0.11.0-SNAPSHOT</matsimVersion>
         <jackson.version>2.9.5</jackson.version>
     </properties>
 </project>

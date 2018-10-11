@@ -1,8 +1,15 @@
 package de.tum.bgu.msm.models.demography;
 
-import de.tum.bgu.msm.container.SiloDataContainer;
-import de.tum.bgu.msm.data.*;
 import de.tum.bgu.msm.SiloUtil;
+import de.tum.bgu.msm.container.SiloDataContainer;
+import de.tum.bgu.msm.data.Accessibility;
+import de.tum.bgu.msm.data.household.Household;
+import de.tum.bgu.msm.data.person.Occupation;
+import de.tum.bgu.msm.data.Zone;
+import de.tum.bgu.msm.data.dwelling.Dwelling;
+import de.tum.bgu.msm.data.job.Job;
+import de.tum.bgu.msm.data.person.Gender;
+import de.tum.bgu.msm.data.person.Person;
 import de.tum.bgu.msm.events.IssueCounter;
 import de.tum.bgu.msm.events.MicroEventModel;
 import de.tum.bgu.msm.events.impls.person.EmploymentEvent;
@@ -48,10 +55,11 @@ public class EmploymentModel extends AbstractModel implements MicroEventModel<Em
     }
 
     private Job findJob(Person pp) {
-        final Dwelling dwelling = dataContainer.getRealEstateData().getDwelling(pp.getHh().getDwellingId());
+        final Household household = pp.getHousehold();
+        final Dwelling dwelling = dataContainer.getRealEstateData().getDwelling(household.getDwellingId());
         Zone zone = null;
         if (dwelling != null) {
-            zone = dataContainer.getGeoData().getZones().get(dwelling.determineZoneId());
+            zone = dataContainer.getGeoData().getZones().get(dwelling.getZoneId());
         }
         final int idVacantJob = dataContainer.getJobData().findVacantJob(zone, dataContainer.getGeoData().getRegions().values(),
                 accessibility);
@@ -63,7 +71,8 @@ public class EmploymentModel extends AbstractModel implements MicroEventModel<Em
         person.setWorkplace(job.getId());
         person.setOccupation(Occupation.EMPLOYED);
         dataContainer.getHouseholdData().selectIncomeForPerson(person);
-        dataContainer.getHouseholdData().addHouseholdThatChanged(person.getHh());
+        Household household = person.getHousehold();
+        dataContainer.getHouseholdData().addHouseholdThatChanged(household);
         if (person.getId() == SiloUtil.trackPp) {
             SiloUtil.trackWriter.println("Person " + person.getId() + " started working for job " + job.getId());
         }
@@ -74,7 +83,8 @@ public class EmploymentModel extends AbstractModel implements MicroEventModel<Em
         final Person person = dataContainer.getHouseholdData().getPersonFromId(perId);
         if (person != null) {
             dataContainer.getJobData().quitJob(true, person);
-            dataContainer.getHouseholdData().addHouseholdThatChanged(person.getHh());
+            Household household = person.getHousehold();
+            dataContainer.getHouseholdData().addHouseholdThatChanged(household);
             if (perId == SiloUtil.trackPp) {
                 SiloUtil.trackWriter.println("Person " + perId + " quit her/his job.");
             }

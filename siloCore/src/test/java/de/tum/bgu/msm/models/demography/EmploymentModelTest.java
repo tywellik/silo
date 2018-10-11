@@ -5,11 +5,15 @@ import de.tum.bgu.msm.Implementation;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.container.SiloModelContainer;
-import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.data.household.Household;
+import de.tum.bgu.msm.data.household.HouseholdUtil;
+import de.tum.bgu.msm.data.job.Job;
+import de.tum.bgu.msm.data.job.JobUtils;
+import de.tum.bgu.msm.data.person.*;
 import de.tum.bgu.msm.data.travelTimes.SkimTravelTimes;
 import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.properties.Properties;
-import de.tum.bgu.msm.utils.SkimUtil;
+import de.tum.bgu.msm.utils.TravelTimeUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -24,21 +28,23 @@ public class EmploymentModelTest {
 
     @BeforeClass
     public static void setupModel() {
-        SiloUtil.siloInitialization("./test/scenarios/annapolis/javaFiles/siloMstm.properties", Implementation.MARYLAND);
+        Properties properties = SiloUtil.siloInitialization("./test/scenarios/annapolis/javaFiles/siloMstm.properties", Implementation.MARYLAND);
         dataContainer = SiloDataContainer.loadSiloDataContainer(Properties.get());
         dataContainer.getHouseholdData().calculateInitialSettings();
         dataContainer.getJobData().identifyVacantJobs();
-        modelContainer = SiloModelContainer.createSiloModelContainer(dataContainer, null);
+        modelContainer = SiloModelContainer.createSiloModelContainer(dataContainer, null, properties);
         model = modelContainer.getEmployment();
     }
 
     @Before
     public void setupMicroData() {
-        Household household1 = dataContainer.getHouseholdData().createHousehold(1, -1, 0);
-        Person person1 = dataContainer.getHouseholdData().createPerson(1, 30, Gender.MALE, Race.other, Occupation.UNEMPLOYED, -1, 0);
+        Household household1 = HouseholdUtil.getFactory().createHousehold(1,-1,0);
+        dataContainer.getHouseholdData().addHousehold(household1);
+        Person person1 = PersonUtils.getFactory().createPerson(1, 30, Gender.MALE, Race.other, Occupation.UNEMPLOYED, -1, 0);
+        dataContainer.getHouseholdData().addPerson(person1);
         dataContainer.getHouseholdData().addPersonToHousehold(person1, household1);
         person1.setRole(PersonRole.SINGLE);
-        SkimUtil.updateCarSkim((SkimTravelTimes) dataContainer.getTravelTimes(), 2000, Properties.get());
+        TravelTimeUtil.updateCarSkim((SkimTravelTimes) dataContainer.getTravelTimes(), 2000, Properties.get());
         SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
         accessibility.initialize();
     }
@@ -51,7 +57,8 @@ public class EmploymentModelTest {
         Assert.assertEquals(Occupation.UNEMPLOYED, person.getOccupation());
         Assert.assertEquals(0, person.getIncome());
 
-        final Job job = dataContainer.getJobData().createJob(1, null, -1, "dummy");
+        Job job = JobUtils.getFactory().createJob(1, -1, null, -1, "dummy");
+        dataContainer.getJobData().addJob(job);
         model.takeNewJob(person, job);
         Assert.assertEquals(1, person.getWorkplace());
         Assert.assertEquals(1, job.getWorkerId());
@@ -68,7 +75,8 @@ public class EmploymentModelTest {
         Assert.assertEquals(Occupation.UNEMPLOYED, person.getOccupation());
         Assert.assertEquals(0, person.getIncome());
 
-        final Job job = dataContainer.getJobData().createJob(2, new ZoneImpl(999,1,1), -1, "dummy");
+        final Job job = JobUtils.getFactory().createJob(2, 1,null, -1, "dummy");
+        dataContainer.getJobData().addJob(job);
         model.takeNewJob(person, job);
 
         int income = person.getIncome();

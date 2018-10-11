@@ -3,6 +3,11 @@ package de.tum.bgu.msm.models.relocation;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.data.dwelling.Dwelling;
+import de.tum.bgu.msm.data.household.Household;
+import de.tum.bgu.msm.data.household.HouseholdType;
+import de.tum.bgu.msm.data.household.HouseholdUtil;
+import de.tum.bgu.msm.data.household.IncomeCategory;
 import de.tum.bgu.msm.events.impls.household.MoveEvent;
 import de.tum.bgu.msm.models.AbstractModel;
 import de.tum.bgu.msm.models.accessibility.Accessibility;
@@ -47,7 +52,7 @@ public abstract class AbstractDefaultMovesModel extends AbstractModel implements
     protected abstract void setupSelectDwellingModel();
 
     protected abstract double calculateDwellingUtilityForHouseholdType(HouseholdType hhType, Dwelling dwelling);
-    protected abstract double personalizeDwellingUtilityForThisHousehold(List<Person> persons, Dwelling dwelling, int income, double genericUtility);
+    protected abstract double personalizeDwellingUtilityForThisHousehold(Household household, Dwelling dwelling, int income, double genericUtility);
 
 
     @Override
@@ -87,7 +92,7 @@ public abstract class AbstractDefaultMovesModel extends AbstractModel implements
             return false;                                                             // Step 1: Consider relocation if household is not very satisfied or if household income exceed restriction for low-income dwelling
         }
         int oldDd = household.getDwellingId();
-        int idNewDD = searchForNewDwelling(household.getPersons());  // Step 2: Choose new dwelling
+        int idNewDD = searchForNewDwelling(household);  // Step 2: Choose new dwelling
         if (idNewDD > 0) {
             moveHousehold(household, household.getDwellingId(), idNewDD);    // Step 3: Move household
             dataContainer.getHouseholdData().addHouseholdThatMoved(household);
@@ -158,7 +163,7 @@ public abstract class AbstractDefaultMovesModel extends AbstractModel implements
                 // dwelling is occupied, evaluate for the current household
                 Household hh = householdData.getHouseholdFromId(dd.getResidentId());
                 double util = calculateDwellingUtilityForHouseholdType(hh.getHouseholdType(), dd);
-                util = personalizeDwellingUtilityForThisHousehold(hh.getPersons(), dd, hh.getHhIncome(), util);
+                util = personalizeDwellingUtilityForThisHousehold(hh, dd, HouseholdUtil.getHhIncome(hh), util);
                 dd.setUtilOfResident(util);
             }
         }
@@ -201,7 +206,7 @@ public abstract class AbstractDefaultMovesModel extends AbstractModel implements
         int counter = 0;
         for (Dwelling d : dataContainer.getRealEstateData().getDwellings()) {
 
-            if (geoData.getZones().get(d.determineZoneId()).getRegion().getId() == region) {
+            if (geoData.getZones().get(d.getZoneId()).getRegion().getId() == region) {
                 priceSum += d.getPrice();
                 counter++;
             }
@@ -220,9 +225,9 @@ public abstract class AbstractDefaultMovesModel extends AbstractModel implements
         final Map<Integer, Zone> zones = geoData.getZones();
         final Map<Integer, List<Dwelling>> dwellingsByRegion =
                 dataContainer.getRealEstateData().getDwellings().parallelStream().collect(Collectors.groupingByConcurrent(d ->
-                        zones.get(d.determineZoneId()).getRegion().getId()));
-        final Map<Integer, Double> rentsByRegion = dwellingsByRegion.entrySet().parallelStream().collect(Collectors.toMap(e ->
-                e.getKey(), e -> e.getValue().stream().mapToDouble(d -> d.getPrice()).average().getAsDouble()));
+                        zones.get(d.getZoneId()).getRegion().getId()));
+        final Map<Integer, Double> rentsByRegion = dwellingsByRegion.entrySet().parallelStream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().stream().mapToDouble(Dwelling::getPrice).average().getAsDouble()));
         return rentsByRegion;
     }
 
@@ -250,8 +255,8 @@ public abstract class AbstractDefaultMovesModel extends AbstractModel implements
         if (dd.getRestriction() <= 0) {
             return true;   // Dwelling is not income restricted
         }
-        int msa = geoData.getZones().get(dd.determineZoneId()).getMsa();
-        return hh.getHhIncome() <= (HouseholdDataManager.getMedianIncome(msa) * dd.getRestriction());
+        int msa = geoData.getZones().get(dd.getZoneId()).getMsa();
+        return HouseholdUtil.getHhIncome(hh) <= (HouseholdDataManager.getMedianIncome(msa) * dd.getRestriction());
     }
 
     @Override

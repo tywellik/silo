@@ -1,5 +1,8 @@
 /target/
 /.classpath
 /.project
+<<<<<<< HEAD
 test/output/
 /timeTracker.csv
+=======
+>>>>>>> refs/heads/master

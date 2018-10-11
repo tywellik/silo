@@ -1,10 +1,13 @@
 package de.tum.bgu.msm.container;
 
 import de.tum.bgu.msm.SiloModel;
+import de.tum.bgu.msm.data.dwelling.DwellingUtils;
+import de.tum.bgu.msm.data.household.HouseholdUtil;
 import de.tum.bgu.msm.data.munich.GeoDataMuc;
 import de.tum.bgu.msm.models.accessibility.Accessibility;
 import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 //import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
+import de.tum.bgu.msm.data.person.PersonUtils;
 import de.tum.bgu.msm.models.autoOwnership.UpdateCarOwnershipModel;
 import de.tum.bgu.msm.models.autoOwnership.maryland.MaryLandUpdateCarOwnershipModel;
 import de.tum.bgu.msm.models.autoOwnership.munich.CreateCarOwnershipModel;
@@ -33,7 +36,6 @@ import org.matsim.core.config.Config;
  * using the repsective getter.  \n
  * All the models are constructed within the SiloModelContainer, removing the initialization code from the SiloModel main body
  * @see SiloModel
- * @see SiloModel#initialize()
  */
 public class SiloModelContainer {
 
@@ -64,7 +66,7 @@ public class SiloModelContainer {
     private final TransportModelI transportModel;
 
     /**
-     * The contructor is private, with a factory method {link {@link SiloModelContainer#createSiloModelContainer(SiloDataContainer, Config)}}
+     * The contructor is private, with a factory method {link {@link SiloModelContainer#createSiloModelContainer(SiloDataContainer, Config, Properties)}}
      * being used to encapsulate the object creation.
      *
      * @param iomig
@@ -126,14 +128,15 @@ public class SiloModelContainer {
      *
      * @return A SiloModelContainer, with each model created within
      */
-    public static SiloModelContainer createSiloModelContainer(SiloDataContainer dataContainer, Config matsimConfig) {
+    public static SiloModelContainer createSiloModelContainer(SiloDataContainer dataContainer, Config matsimConfig,
+                                                              Properties properties) {
 
-        boolean runMatsim = Properties.get().transportModel.runMatsim;
-        boolean runTravelDemandModel = Properties.get().transportModel.runTravelDemandModel;
+        boolean runMatsim = properties.transportModel.runMatsim;
+        boolean runTravelDemandModel = properties.transportModel.runTravelDemandModel;
 
         TransportModelI transportModel;
         Accessibility accesibility;
-        if (runMatsim && (runTravelDemandModel || Properties.get().main.createMstmOutput)) {
+        if (runMatsim && (runTravelDemandModel || properties.main.createMstmOutput)) {
             throw new RuntimeException("trying to run both MATSim and MSTM is inconsistent at this point.");
         }
         if (runMatsim) {
@@ -153,7 +156,7 @@ public class SiloModelContainer {
         }
 
         DeathModel death = new DeathModel(dataContainer);
-        BirthModel birth = new BirthModel(dataContainer);
+        BirthModel birth = new BirthModel(dataContainer, PersonUtils.getFactory());
         BirthdayModel birthday = new BirthdayModel(dataContainer);
         ChangeSchoolUnivModel changeSchoolUniv = new ChangeSchoolUnivModel(dataContainer);
         DriversLicense driversLicense = new DriversLicense(dataContainer);
@@ -163,7 +166,7 @@ public class SiloModelContainer {
         RenovationModel renov = new RenovationModel(dataContainer);
         PricingModel prm = new PricingModel(dataContainer);
         UpdateJobs updateJobs = new UpdateJobs(dataContainer);
-        ConstructionOverwrite ddOverwrite = new ConstructionOverwrite(dataContainer);
+        ConstructionOverwrite ddOverwrite = new ConstructionOverwrite(dataContainer, DwellingUtils.getFactory());
 
         UpdateCarOwnershipModel updateCarOwnershipModel;
         CreateCarOwnershipModel createCarOwnershipModel = null;
@@ -183,15 +186,16 @@ public class SiloModelContainer {
             default:
                 throw new RuntimeException("Models not defined for implementation " + Properties.get().main.implementation);
         }
-        ConstructionModel cons = new ConstructionModel(dataContainer, move, accesibility);
+        ConstructionModel cons = new ConstructionModel(dataContainer, move, accesibility, DwellingUtils.getFactory());
         EmploymentModel changeEmployment = new EmploymentModel(dataContainer, accesibility);
         updateCarOwnershipModel.initialize();
-        LeaveParentHhModel lph = new LeaveParentHhModel(dataContainer, move, createCarOwnershipModel);
-        InOutMigration iomig = new InOutMigration(dataContainer, changeEmployment, move, createCarOwnershipModel, driversLicense);
+        LeaveParentHhModel lph = new LeaveParentHhModel(dataContainer, move, createCarOwnershipModel, HouseholdUtil.getFactory());
+        InOutMigration iomig = new InOutMigration(dataContainer, changeEmployment, move, createCarOwnershipModel, driversLicense,
+                PersonUtils.getFactory(), HouseholdUtil.getFactory());
         DemolitionModel demol = new DemolitionModel(dataContainer, move, iomig);
-        MarriageModel marriage = new DefaultMarriageModel(dataContainer, move, iomig, createCarOwnershipModel);
+        MarriageModel marriage = new DefaultMarriageModel(dataContainer, move, iomig, createCarOwnershipModel, HouseholdUtil.getFactory());
 //        MarriageModel marriage = new DeferredAcceptanceMarriageModel(dataContainer, acc);
-        DivorceModel divorce = new DivorceModel(dataContainer, move, createCarOwnershipModel);
+        DivorceModel divorce = new DivorceModel(dataContainer, move, createCarOwnershipModel, HouseholdUtil.getFactory());
 
         return new SiloModelContainer(iomig, cons, ddOverwrite, renov, demol,
                 prm, birth, birthday, death, marriage, divorce, lph, move, changeEmployment, changeSchoolUniv, driversLicense, accesibility,
