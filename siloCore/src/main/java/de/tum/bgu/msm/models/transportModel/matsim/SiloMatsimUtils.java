@@ -22,7 +22,6 @@ import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationFactory;
-import org.matsim.contrib.accessibility.AccessibilityConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
@@ -97,7 +96,7 @@ public class SiloMatsimUtils {
 		config.parallelEventHandling().setNumberOfThreads(1);
 		config.qsim().setUsingThreadpool(false);
 		
-		AccessibilityConfigGroup accessibilityConfigGroup = ConfigUtils.addOrGetModule(config, AccessibilityConfigGroup.GROUP_NAME, AccessibilityConfigGroup.class);
+//		AccessibilityConfigGroup accessibilityConfigGroup = ConfigUtils.addOrGetModule(config, AccessibilityConfigGroup.GROUP_NAME, AccessibilityConfigGroup.class);
 //		accessibilityConfigGroup.setMeasuringPointsFacilities(zoneCentroids); // TODO
 //		double timeOfDay = accessibilityConfigGroup.getTimeOfDay();
 		
