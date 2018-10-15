@@ -1,10 +1,13 @@
 package de.tum.bgu.msm.container;
 
 import de.tum.bgu.msm.SiloModel;
+import de.tum.bgu.msm.data.Zone;
 import de.tum.bgu.msm.data.dwelling.DwellingUtils;
 import de.tum.bgu.msm.data.household.HouseholdUtil;
 import de.tum.bgu.msm.data.munich.GeoDataMuc;
+import de.tum.bgu.msm.models.CommutingTimeModel;
 import de.tum.bgu.msm.models.accessibility.Accessibility;
+import de.tum.bgu.msm.models.accessibility.MatsimAccessibility;
 import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.data.person.PersonUtils;
 import de.tum.bgu.msm.models.autoOwnership.UpdateCarOwnershipModel;
@@ -23,8 +26,21 @@ import de.tum.bgu.msm.models.transportModel.MitoTransportModel;
 import de.tum.bgu.msm.models.transportModel.TransportModelI;
 import de.tum.bgu.msm.models.transportModel.matsim.MatsimTransportModel;
 import de.tum.bgu.msm.properties.Properties;
+
+import java.util.Map;
+
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.Id;
 import org.matsim.core.config.Config;
+import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.facilities.ActivityFacilities;
+import org.matsim.facilities.ActivityFacilitiesFactory;
+import org.matsim.facilities.ActivityFacilitiesFactoryImpl;
+import org.matsim.facilities.ActivityFacility;
+import org.matsim.facilities.FacilitiesUtils;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * @author joemolloy
@@ -58,6 +74,7 @@ public class SiloModelContainer {
     private final ChangeSchoolUnivModel changeSchoolUniv;
     private final DriversLicense driversLicense;
     private final Accessibility acc;
+    private final CommutingTimeModel commutingTimeModel;
     private final UpdateCarOwnershipModel updateCarOwnershipModel;
     private final UpdateJobs updateJobs;
     private final CreateCarOwnershipModel createCarOwnershipModel;
@@ -94,7 +111,7 @@ public class SiloModelContainer {
                                PricingModel prm, BirthModel birth, BirthdayModel birthday, DeathModel death, MarriageModel marriage,
                                DivorceModel divorce, LeaveParentHhModel lph, MovesModelI move, EmploymentModel changeEmployment,
                                ChangeSchoolUnivModel changeSchoolUniv, DriversLicense driversLicense,
-                               Accessibility acc, UpdateCarOwnershipModel updateCarOwnershipModel, UpdateJobs updateJobs,
+                               Accessibility acc, CommutingTimeModel commutingTimeModel, UpdateCarOwnershipModel updateCarOwnershipModel, UpdateJobs updateJobs,
                                CreateCarOwnershipModel createCarOwnershipModel, SwitchToAutonomousVehicleModel switchToAutonomousVehicleModel,
                                TransportModelI transportModel) {
         this.iomig = iomig;
@@ -114,6 +131,7 @@ public class SiloModelContainer {
         this.changeSchoolUniv = changeSchoolUniv;
         this.driversLicense = driversLicense;
         this.acc = acc;
+        this.commutingTimeModel = commutingTimeModel;
         this.updateCarOwnershipModel = updateCarOwnershipModel;
         this.updateJobs = updateJobs;
         this.createCarOwnershipModel = createCarOwnershipModel;
@@ -135,14 +153,23 @@ public class SiloModelContainer {
 
         TransportModelI transportModel;
         Accessibility accesibility;
+        CommutingTimeModel commutingTimeModel = new CommutingTimeModel();
         if (runMatsim && (runTravelDemandModel || properties.main.createMstmOutput)) {
             throw new RuntimeException("trying to run both MATSim and MSTM is inconsistent at this point.");
         }
         if (runMatsim) {
             LOGGER.info("  MATSim is used as the transport model");
-            MatsimTransportModel tmpModel = new MatsimTransportModel(dataContainer, matsimConfig);
-            transportModel = tmpModel;
-            accesibility = new SkimBasedAccessibility(dataContainer); // TODO change to new MATSimAccessibility
+            ActivityFacilities zoneCentroids = FacilitiesUtils.createActivityFacilities();
+            ActivityFacilitiesFactory aff = new ActivityFacilitiesFactoryImpl();
+            Map<Integer, Zone> zoneMap = dataContainer.getGeoData().getZones();
+            for (int zoneId : zoneMap.keySet()) {
+            	Geometry geometry = (Geometry) zoneMap.get(zoneId).getZoneFeature().getDefaultGeometry();
+            	Coord centroid = CoordUtils.createCoord(geometry.getCentroid().getX(), geometry.getCentroid().getY());
+            	ActivityFacility activityFacility = aff.createActivityFacility(Id.create(zoneId, ActivityFacility.class), centroid);
+            	zoneCentroids.addActivityFacility(activityFacility);
+            }
+            accesibility = new MatsimAccessibility(dataContainer);
+            transportModel = new MatsimTransportModel(dataContainer, matsimConfig, zoneCentroids, ((MatsimAccessibility) accesibility));
         } else {
             if (runTravelDemandModel) {
                 LOGGER.info("  MITO is used as the transport model");
@@ -173,20 +200,20 @@ public class SiloModelContainer {
         switch (Properties.get().main.implementation) {
             case MARYLAND:
                 updateCarOwnershipModel = new MaryLandUpdateCarOwnershipModel(dataContainer, accesibility);
-                move = new MovesModelMstm(dataContainer, accesibility);
+                move = new MovesModelMstm(dataContainer, accesibility, commutingTimeModel);
                 break;
             case MUNICH:
                 createCarOwnershipModel = new CreateCarOwnershipModel(dataContainer,
                         (GeoDataMuc)dataContainer.getGeoData());
                 updateCarOwnershipModel = new MunichUpdateCarOwnerShipModel(dataContainer);
                 switchToAutonomousVehicleModel = new SwitchToAutonomousVehicleModel(dataContainer);
-                move = new MovesModelMuc(dataContainer, accesibility);
+                move = new MovesModelMuc(dataContainer, accesibility, commutingTimeModel);
                 break;
             default:
                 throw new RuntimeException("Models not defined for implementation " + Properties.get().main.implementation);
         }
         ConstructionModel cons = new ConstructionModel(dataContainer, move, accesibility, DwellingUtils.getFactory());
-        EmploymentModel changeEmployment = new EmploymentModel(dataContainer, accesibility);
+        EmploymentModel changeEmployment = new EmploymentModel(dataContainer, commutingTimeModel);
         updateCarOwnershipModel.initialize();
         LeaveParentHhModel lph = new LeaveParentHhModel(dataContainer, move, createCarOwnershipModel, HouseholdUtil.getFactory());
         InOutMigration iomig = new InOutMigration(dataContainer, changeEmployment, move, createCarOwnershipModel, driversLicense,
@@ -198,7 +225,7 @@ public class SiloModelContainer {
 
         return new SiloModelContainer(iomig, cons, ddOverwrite, renov, demol,
                 prm, birth, birthday, death, marriage, divorce, lph, move, changeEmployment, changeSchoolUniv, driversLicense, accesibility,
-                updateCarOwnershipModel, updateJobs, createCarOwnershipModel, switchToAutonomousVehicleModel, transportModel);
+                commutingTimeModel, updateCarOwnershipModel, updateJobs, createCarOwnershipModel, switchToAutonomousVehicleModel, transportModel);
     }
 
 
@@ -268,6 +295,10 @@ public class SiloModelContainer {
 
     public Accessibility getAcc() {
         return acc;
+    }
+    
+    public CommutingTimeModel getCommutingTimeModel() {
+        return commutingTimeModel;
     }
 
     public UpdateCarOwnershipModel getUpdateCarOwnershipModel() {
