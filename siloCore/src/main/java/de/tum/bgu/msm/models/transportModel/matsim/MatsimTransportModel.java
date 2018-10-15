@@ -29,6 +29,7 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.contrib.accessibility.AccessibilityConfigGroup;
+import org.matsim.contrib.accessibility.AccessibilityConfigGroup.AccessibilityMeasureType;
 import org.matsim.contrib.accessibility.AccessibilityConfigGroup.AreaOfAccesssibilityComputation;
 import org.matsim.contrib.accessibility.AccessibilityModule;
 import org.matsim.core.api.experimental.events.EventsManager;
@@ -157,6 +158,7 @@ public final class MatsimTransportModel implements TransportModelI  {
 		acg.setCellSizeCellBasedAccessibility(500); // TODO This should not be necessary here
 		acg.setUseOpportunityWeights(true);
 		acg.setWeightExponent(1.2); // This corresponds to SILO's alpha
+		acg.setAccessibilityMeasureType(AccessibilityMeasureType.rawSum);
 		
 		ConfigUtils.setVspDefaults(config);
 		// End accessibility settings
