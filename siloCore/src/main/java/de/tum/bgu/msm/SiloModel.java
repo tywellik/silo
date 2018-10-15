@@ -35,6 +35,7 @@ import de.tum.bgu.msm.models.CommutingTimeModel;
 import de.tum.bgu.msm.models.accessibility.MatsimAccessibility;
 import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.properties.Properties;
+import de.tum.bgu.msm.utils.SiloUtil;
 import de.tum.bgu.msm.utils.TravelTimeUtil;
 import de.tum.bgu.msm.utils.TimeTracker;
 import org.apache.log4j.Logger;

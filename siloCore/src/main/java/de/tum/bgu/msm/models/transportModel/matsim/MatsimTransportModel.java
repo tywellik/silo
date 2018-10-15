@@ -25,6 +25,7 @@ import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.contrib.accessibility.AccessibilityConfigGroup;
@@ -38,6 +39,8 @@ import org.matsim.core.config.groups.FacilitiesConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.MatsimEventsReader;
+import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripRouterFactoryBuilderWithDefaults;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutilityFactory;
@@ -68,6 +71,7 @@ public final class MatsimTransportModel implements TransportModelI  {
 	private final SiloDataContainer dataContainer;
 	private ActivityFacilities zoneCentroids;
 	private MatsimAccessibility accessibility;
+	private final Network network;
 	
 	
 	public MatsimTransportModel(SiloDataContainer dataContainer, Config matsimConfig, ActivityFacilities zoneCentroids, MatsimAccessibility accessibility) {
@@ -76,6 +80,9 @@ public final class MatsimTransportModel implements TransportModelI  {
 		this.travelTimes = (MatsimTravelTimes) Objects.requireNonNull(dataContainer.getTravelTimes());
 		this.zoneCentroids = zoneCentroids;
 		this.accessibility = accessibility;
+		network = NetworkUtils.createNetwork();
+		new MatsimNetworkReader(network).readFile(matsimConfig.network().getInputFileURL(matsimConfig.getContext()).getFile());
+		travelTimes.initialize(dataContainer.getGeoData().getZones().values(), network);
 	}
 
 	@Override
@@ -167,7 +174,7 @@ public final class MatsimTransportModel implements TransportModelI  {
 		
 		TravelTime travelTime = controler.getLinkTravelTimes();
 		TravelDisutility travelDisutility = controler.getTravelDisutilityFactory().createTravelDisutility(travelTime);
-        updateTravelTimes(scenario, controler.getTripRouterProvider().get(), travelTime, travelDisutility);
+        updateTravelTimes(controler.getTripRouterProvider().get(), travelTime, travelDisutility);
 	}
 
     /**
@@ -182,10 +189,10 @@ public final class MatsimTransportModel implements TransportModelI  {
         TripRouter tripRouter = TripRouterFactoryBuilderWithDefaults.createDefaultTripRouterFactoryImpl(scenario).get();
         TravelTime travelTime = ttCalculator.getLinkTravelTimes();
         TravelDisutility travelDisutility = new OnlyTimeDependentTravelDisutilityFactory().createTravelDisutility(travelTime);
-        updateTravelTimes(scenario, tripRouter, travelTime, travelDisutility);
+        updateTravelTimes(tripRouter, travelTime, travelDisutility);
 	}
 
-	private void updateTravelTimes(MutableScenario scenario, TripRouter tripRouter, TravelTime travelTime, TravelDisutility disutility) {
+	private void updateTravelTimes(TripRouter tripRouter, TravelTime travelTime, TravelDisutility disutility) {
 		LeastCostPathTree leastCoastPathTree = new LeastCostPathTree(travelTime, disutility);
 //
 ////		travelTimes.update(leastCoastPathTree, zoneFeatureMap, scenario.getNetwork(), controler.getTripRouterProvider().get() );
@@ -198,7 +205,7 @@ public final class MatsimTransportModel implements TransportModelI  {
 //		if (config.transit().isUseTransit() && Properties.get().main.implementation == Implementation.MUNICH) {
 //			MatsimPTDistances matsimPTDistances = new MatsimPTDistances(config, scenario, (GeoDataMuc) dataContainer.getGeoData());
 //		}
-		travelTimes.update(tripRouter, dataContainer.getGeoData().getZones().values(), scenario.getNetwork(), leastCoastPathTree);
+		travelTimes.update(tripRouter, leastCoastPathTree);
 		
 //		tripRouter = controler.getTripRouterProvider().get();
 	}

@@ -2,6 +2,7 @@ package de.tum.bgu.msm;
 
 import de.tum.bgu.msm.data.SummarizeData;
 import de.tum.bgu.msm.properties.Properties;
+import de.tum.bgu.msm.utils.SiloUtil;
 import org.apache.log4j.Logger;
 import org.matsim.core.config.Config;
 
