@@ -92,7 +92,7 @@ public class MaryLandUpdateCarOwnershipModel extends AbstractModel implements Up
             int workers = Math.min(HouseholdUtil.getNumberOfWorkers(household), 4);
             int incomeCategory = getIncomeCategory(HouseholdUtil.getHhIncome(household));
             Dwelling dwelling = dataContainer.getRealEstateData().getDwelling(household.getDwellingId());
-            int transitAcc = (int) (accessibility.getTransitAccessibilityForZone(dwelling.getZoneId()) + 0.5);
+            int transitAcc = (int) (accessibility.getTransitAccessibilityForZone(dataContainer.getGeoData().getZones().get(dwelling.getZoneId())) + 0.5);
             int density = dataContainer.getJobData().getJobDensityCategoryOfZone(dwelling.getZoneId());
             for (int i = 1; i < 4; i++) {
                 prob[i] = autoOwnerShipUtil[i - 1][hhSize - 1][workers][incomeCategory - 1][transitAcc][density - 1];

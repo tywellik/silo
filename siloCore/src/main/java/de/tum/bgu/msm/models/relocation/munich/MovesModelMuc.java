@@ -129,7 +129,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
                 Map<Integer, Double> utilitiesByRegionForThisNationalityAndIncome = new HashMap<>();
                 for (Region region : geoData.getRegions().values()){
                     final int averageRegionalRent = rentsByRegion.get(region.getId()).intValue();
-                    final float regAcc = (float) convertAccessToUtility(accessibility.getRegionalAccessibility(region.getId()));
+                    final float regAcc = (float) convertAccessToUtility(accessibility.getRegionalAccessibility(region));
                     float priceUtil = (float) convertPriceToUtility(averageRegionalRent, incomeCategory);
                     utilitiesByRegionForThisNationalityAndIncome.put(region.getId(),
                             regionCalculator.calculateSelectRegionProbability(incomeCategory,
@@ -275,8 +275,8 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
     protected double calculateDwellingUtilityForHouseholdType(HouseholdType ht, Dwelling dd) {
         double ddQualityUtility = convertQualityToUtility(dd.getQuality());
         double ddSizeUtility = convertAreaToUtility(dd.getBedrooms());
-        double ddAutoAccessibilityUtility = convertAccessToUtility(accessibility.getAutoAccessibilityForZone(dd.getZoneId()));
-        double transitAccessibilityUtility = convertAccessToUtility(accessibility.getTransitAccessibilityForZone(dd.getZoneId()));
+        double ddAutoAccessibilityUtility = convertAccessToUtility(accessibility.getAutoAccessibilityForZone(geoData.getZones().get(dd.getZoneId())));
+        double transitAccessibilityUtility = convertAccessToUtility(accessibility.getTransitAccessibilityForZone(geoData.getZones().get(dd.getZoneId())));
         double ddPriceUtility = convertPriceToUtility(dd.getPrice(), ht);
         return dwellingUtilityJSCalculator.calculateSelectDwellingUtility(ht, ddSizeUtility, ddPriceUtility,
                 ddQualityUtility, ddAutoAccessibilityUtility,

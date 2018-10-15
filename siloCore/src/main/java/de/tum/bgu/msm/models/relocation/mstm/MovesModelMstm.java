@@ -175,7 +175,7 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
                 price = 0;
             }
             priceByRegion.put(id, price);
-            accessibilityByRegion.put(id, (float) convertAccessToUtility(accessibility.getRegionalAccessibility(id)));
+            accessibilityByRegion.put(id, (float) convertAccessToUtility(accessibility.getRegionalAccessibility(region)));
             schoolQualityByRegion.put(id,  (float) ((MstmRegion) region).getSchoolQuality());
             crimeRateByRegion.put(id , (float) (1f - ((MstmRegion) region).getCrimeRate()));  // invert utility, as lower crime rate has higher utility
         }
@@ -336,8 +336,8 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
 
         double ddQualityUtility = convertQualityToUtility(dd.getQuality());
         double ddSizeUtility = convertAreaToUtility(dd.getBedrooms());
-        double ddAutoAccessibilityUtility = convertAccessToUtility(accessibility.getAutoAccessibilityForZone(dd.getZoneId()));
-        double transitAccessibilityUtility = convertAccessToUtility(accessibility.getTransitAccessibilityForZone(dd.getZoneId()));
+        double ddAutoAccessibilityUtility = convertAccessToUtility(accessibility.getAutoAccessibilityForZone(geoData.getZones().get(dd.getZoneId())));
+        double transitAccessibilityUtility = convertAccessToUtility(accessibility.getTransitAccessibilityForZone(geoData.getZones().get(dd.getZoneId())));
         double ddPriceUtility = convertPriceToUtility(dd.getPrice(), ht);
 
         return dwellingUtilityJSCalculator.calculateSelectDwellingUtility(ht, ddSizeUtility, ddPriceUtility,
@@ -353,8 +353,8 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
 
             double ddQualityUtility = convertQualityToUtility(dd.getQuality());
             double ddSizeUtility = convertAreaToUtility(dd.getBedrooms());
-            double ddAutoAccessibilityUtility = convertAccessToUtility(accessibility.getAutoAccessibilityForZone(dd.getZoneId()));
-            double transitAccessibilityUtility = convertAccessToUtility(accessibility.getTransitAccessibilityForZone(dd.getZoneId()));
+            double ddAutoAccessibilityUtility = convertAccessToUtility(accessibility.getAutoAccessibilityForZone(geoData.getZones().get(dd.getZoneId())));
+            double transitAccessibilityUtility = convertAccessToUtility(accessibility.getTransitAccessibilityForZone(geoData.getZones().get(dd.getZoneId())));
 
             int price = dd.getPrice();
             if (provideRentSubsidyToLowIncomeHh && income > 0) {     // income equals -1 if dwelling is vacant right now

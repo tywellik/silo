@@ -1,5 +1,8 @@
 package de.tum.bgu.msm.models.accessibility;
 
+import de.tum.bgu.msm.data.Region;
+import de.tum.bgu.msm.data.Zone;
+
 /**
  * @author dziemke, nico
  */
@@ -16,9 +19,9 @@ public interface Accessibility {
 	// TODO Maybe rename this method?
 	public void calculateHansenAccessibilities(int year);
 	
-	public double getAutoAccessibilityForZone(int zone);
+	public double getAutoAccessibilityForZone(Zone zone);
 	
-	public double getTransitAccessibilityForZone(int zoneId);
+	public double getTransitAccessibilityForZone(Zone zone);
 	
-	public double getRegionalAccessibility(int region);
+	public double getRegionalAccessibility(Region region);
 }

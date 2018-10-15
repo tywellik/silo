@@ -197,20 +197,20 @@ public class SkimBasedAccessibility implements Accessibility {
     }
 
     @Override
-    public double getAutoAccessibilityForZone(int zone) {
+    public double getAutoAccessibilityForZone(Zone zone) {
     	// Can be combined with getTransitAccessibilityForZone into one method which get the mode
     	// as an argument, nk/dz, july'18
-        return this.autoAccessibilities.getQuick(zone);
+        return this.autoAccessibilities.getQuick(zone.getId());
     }
     
     @Override
-    public double getTransitAccessibilityForZone(int zoneId) {
-        return this.transitAccessibilities.getQuick(zoneId);
+    public double getTransitAccessibilityForZone(Zone zone) {
+        return this.transitAccessibilities.getQuick(zone.getId());
     }
 
     @Override
-    public double getRegionalAccessibility(int region) {
-        return regionalAccessibilities.getQuick(region);
+    public double getRegionalAccessibility(Region region) {
+        return regionalAccessibilities.getQuick(region.getId());
     }
     
     public double getPeakTravelCosts(Location i, Location j) {

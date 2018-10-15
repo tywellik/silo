@@ -19,7 +19,6 @@ import de.tum.bgu.msm.util.matrices.Matrices;
 /**
  * @author dziemke
  **/
-
 public class MatsimAccessibility implements Accessibility, FacilityDataExchangeInterface {
 	private static final Logger LOG = Logger.getLogger(MatsimAccessibility.class);
 
@@ -38,8 +37,9 @@ public class MatsimAccessibility implements Accessibility, FacilityDataExchangeI
 	// FacilityDataExchangeInterface methods
 	@Override
 	public void setFacilityAccessibilities(ActivityFacility measurePoint, Double timeOfDay, Map<String, Double> accessibilities){
-		// LOG.info("Set accessibility for " + measurePoint.getId() + " at location " + measurePoint.getCoord());
-		accessibilitiesMap.put(new Tuple<ActivityFacility, Double>(measurePoint, timeOfDay), accessibilities);
+		if (timeOfDay == 8 * 60. * 60.) { // TODO Find better way for this check
+			accessibilitiesMap.put(new Tuple<ActivityFacility, Double>(measurePoint, timeOfDay), accessibilities);
+		}
 	}
 		
 	@Override
@@ -52,10 +52,9 @@ public class MatsimAccessibility implements Accessibility, FacilityDataExchangeI
     public void calculateHansenAccessibilities(int year) {
 		LOG.info("Prepare accessibility data structure for SILO.");
 		for (Tuple<ActivityFacility, Double> tuple : accessibilitiesMap.keySet()) {
-			if (tuple.getSecond() == 8 * 60. * 60.) {
+			if (tuple.getSecond() == 8 * 60. * 60.) { // TODO Need to make this more flexible
 				ActivityFacility activityFacility = tuple.getFirst();
-				Map<String, Double> accessibilityByMode = accessibilitiesMap.get(tuple);
-				Double freeSpeedAccessibility = accessibilityByMode.get("freespeed");
+				double freeSpeedAccessibility = accessibilitiesMap.get(tuple).get("freespeed");
 				autoAccessibilities.put(activityFacility.getId(), freeSpeedAccessibility);
 			}
 		}
@@ -68,19 +67,19 @@ public class MatsimAccessibility implements Accessibility, FacilityDataExchangeI
     }
 	
     @Override
-    public double getAutoAccessibilityForZone(int zoneId) {
-    	return autoAccessibilities.get(Id.create(zoneId, ActivityFacility.class));
+    public double getAutoAccessibilityForZone(Zone zone) {
+    	return autoAccessibilities.get(Id.create(zone.getId(), ActivityFacility.class));
     }
     
     @Override
-    public double getTransitAccessibilityForZone(int zoneId) {
+    public double getTransitAccessibilityForZone(Zone zone) {
     	LOG.warn("Transit accessibilities not yet properly implemented.");
-    	return autoAccessibilities.get(Id.create(zoneId, ActivityFacility.class)); // TODO
+    	return autoAccessibilities.get(Id.create(zone.getId(), ActivityFacility.class)); // TODO Put transit accessibilities here!
     }
 
     @Override
-    public double getRegionalAccessibility(int region) {
-    	return regionalAccessibilities.get(region);
+    public double getRegionalAccessibility(Region region) {
+    	return regionalAccessibilities.get(region.getId());
     }
     
     // Other methods
@@ -100,13 +99,12 @@ public class MatsimAccessibility implements Accessibility, FacilityDataExchangeI
 	private static DoubleMatrix1D calculateRegionalAccessibility(Collection<Region> regions, Map<Id<ActivityFacility>, Double> autoAccessibilities) {
         final DoubleMatrix1D matrix = Matrices.doubleMatrix1D(regions);
         for (Region region : regions) {
-        	Collection<Zone> zones = region.getZones();
         	double regionalAccessibilitySum = 0.;
-        	for (Zone zone : zones) {
+        	for (Zone zone : region.getZones()) {
         		Id<ActivityFacility> measurePointId = Id.create(zone.getId(), ActivityFacility.class);
         		regionalAccessibilitySum = regionalAccessibilitySum + autoAccessibilities.get(measurePointId);
         	}
-        	matrix.set(region.getId(), regionalAccessibilitySum / zones.size());
+        	matrix.set(region.getId(), regionalAccessibilitySum / region.getZones().size());
         }
         return matrix;
     }

@@ -150,8 +150,8 @@ public class SummarizeData {
             int ddThisZone = 0;
             for (DwellingType dt : DwellingType.values()) ddThisZone += dds[dt.ordinal()][taz];
             if (ddThisZone > 0) avePrice = prices[taz] / ddThisZone;
-            double autoAcc = modelContainer.getAcc().getAutoAccessibilityForZone(taz);
-            double transitAcc = modelContainer.getAcc().getTransitAccessibilityForZone(taz);
+            double autoAcc = modelContainer.getAcc().getAutoAccessibilityForZone(dataContainer.getGeoData().getZones().get(taz));
+            double transitAcc = modelContainer.getAcc().getTransitAccessibilityForZone(dataContainer.getGeoData().getZones().get(taz));
             double availLand = dataContainer.getRealEstateData().getAvailableLandForConstruction(taz);
 //            Formatter f = new Formatter();
 //            f.format("%d,%f,%f,%d,%d,%d,%f,%f,%d", taz, autoAcc, transitAcc, pop[taz], hhs[taz], dds[taz], availLand, avePrice, jobs[taz]);
@@ -1149,7 +1149,7 @@ public class SummarizeData {
             int county = ((MstmZone) geoData.getZones().get(zone)).getCounty().getId();
             autos[autoOwnership][county]++;
             pwa.println(hh.getHhSize() + "," + HouseholdUtil.getNumberOfWorkers(hh) + "," + HouseholdUtil.getHhIncome(hh) + "," +
-                    accessibility.getTransitAccessibilityForZone(zone) + "," + jobData.getJobDensityInZone(zone) + "," + hh.getAutos());
+                    accessibility.getTransitAccessibilityForZone(dataContainer.getGeoData().getZones().get(zone)) + "," + jobData.getJobDensityInZone(zone) + "," + hh.getAutos());
         }
         pwa.close();
 
