@@ -13,6 +13,9 @@ public interface Accessibility {
 	
 	// TODO use Location instead of zone as argument
 	
+	// TODO Maybe rename this method?
+	public void calculateHansenAccessibilities(int year);
+	
 	public double getAutoAccessibilityForZone(int zone);
 	
 	public double getTransitAccessibilityForZone(int zoneId);
