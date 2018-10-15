@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 
 import com.pb.common.datafile.TableDataSet;
 
-import de.tum.bgu.msm.SiloUtil;
+import de.tum.bgu.msm.utils.SiloUtil;
 import de.tum.bgu.msm.properties.Properties;
 
 public class CommutingTimeModel {
