@@ -4,13 +4,11 @@ import de.tum.bgu.msm.data.SummarizeData;
 import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ResourceBundle;
 
 /**
  * @author dziemke
