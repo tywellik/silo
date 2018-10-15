@@ -21,19 +21,20 @@ package de.tum.bgu.msm.models.transportModel.matsim;
 import java.io.File;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 
-
-import de.tum.bgu.msm.container.SiloDataContainer;
-import de.tum.bgu.msm.models.transportModel.TransportModelI;
-import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationWriter;
+import org.matsim.contrib.accessibility.AccessibilityConfigGroup;
+import org.matsim.contrib.accessibility.AccessibilityConfigGroup.AreaOfAccesssibilityComputation;
+import org.matsim.contrib.accessibility.AccessibilityModule;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.api.internal.MatsimWriter;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.FacilitiesConfigGroup;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.MatsimEventsReader;
@@ -44,33 +45,16 @@ import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.core.utils.geometry.CoordUtils;
-import org.matsim.facilities.ActivityFacilities;
-import org.matsim.facilities.ActivityFacilitiesFactory;
-import org.matsim.facilities.ActivityFacilitiesFactoryImpl;
-import org.matsim.facilities.ActivityFacility;
-import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
+import org.matsim.facilities.ActivityFacilities;
+import org.matsim.facilities.ActivityFacility;
 import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
 
-import com.vividsolutions.jts.geom.Geometry;
-
-//import Implementation;
-
 import de.tum.bgu.msm.container.SiloDataContainer;
-import de.tum.bgu.msm.data.Zone;
+import de.tum.bgu.msm.data.SummarizeData;
+import de.tum.bgu.msm.models.accessibility.MatsimAccessibility;
 import de.tum.bgu.msm.models.transportModel.TransportModelI;
 import de.tum.bgu.msm.properties.Properties;
-
-//import GeoDataMuc;
-//import de.tum.bgu.msm.data.travelTimes.TravelTimes;
-//import org.matsim.core.router.util.TravelDisutility;
-//import org.matsim.core.router.util.TravelTime;
-//import org.matsim.core.utils.gis.ShapeFileReader;
-//import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
-//import org.opengis.feature.simple.SimpleFeature;
-//import java.util.HashMap;
-//import java.util.Map;
 
 /**
  * @author dziemke
@@ -82,27 +66,16 @@ public final class MatsimTransportModel implements TransportModelI  {
 	private final MatsimTravelTimes travelTimes;
 //	private TripRouter tripRouter = null;
 	private final SiloDataContainer dataContainer;
-	private ActivityFacilities zoneCentroids = FacilitiesUtils.createActivityFacilities();
+	private ActivityFacilities zoneCentroids;
+	private MatsimAccessibility accessibility;
 	
 	
-	public MatsimTransportModel(SiloDataContainer dataContainer, Config matsimConfig) {
+	public MatsimTransportModel(SiloDataContainer dataContainer, Config matsimConfig, ActivityFacilities zoneCentroids, MatsimAccessibility accessibility) {
 		this.dataContainer = Objects.requireNonNull(dataContainer);
-		this.initialMatsimConfig = Objects.requireNonNull(matsimConfig );
+		this.initialMatsimConfig = Objects.requireNonNull(matsimConfig);
 		this.travelTimes = (MatsimTravelTimes) Objects.requireNonNull(dataContainer.getTravelTimes());
-		
-		createZoneCentroidMap();
-	}
-
-	private void createZoneCentroidMap() {
-		
-		ActivityFacilitiesFactory aff = new ActivityFacilitiesFactoryImpl();
-		Map<Integer, Zone> zoneMap = dataContainer.getGeoData().getZones();
-		for (int zoneId : zoneMap.keySet()) {
-			Geometry geometry = (Geometry) zoneMap.get(zoneId).getZoneFeature().getDefaultGeometry();
-			Coord centroid = CoordUtils.createCoord(geometry.getCentroid().getX(), geometry.getCentroid().getY());
-			ActivityFacility activityFacility = aff.createActivityFacility(Id.create(zoneId, ActivityFacility.class), centroid);
-			zoneCentroids.addActivityFacility(activityFacility);
-		}
+		this.zoneCentroids = zoneCentroids;
+		this.accessibility = accessibility;
 	}
 
 	@Override
@@ -155,19 +128,39 @@ public final class MatsimTransportModel implements TransportModelI  {
 		MutableScenario scenario = (MutableScenario) ScenarioUtils.loadScenario(config);
 		scenario.setPopulation(population);
 		
-//		final Controler controler = new Controler(scenario);
+		// Opportunities
+		Map<Integer, Integer> populationMap = SummarizeData.getPopulationByZoneAsMap(dataContainer);
+		Map<Id<ActivityFacility>, Integer> zonePopulationMap = new TreeMap<>();
+		for (int zoneId : populationMap.keySet()) {
+			zonePopulationMap.put(Id.create(zoneId, ActivityFacility.class), populationMap.get(zoneId));
+		}
+		final ActivityFacilities opportunities = scenario.getActivityFacilities();
+		for (ActivityFacility activityFacility : zoneCentroids.getFacilities().values()) {
+			activityFacility.getCustomAttributes().put("weight", zonePopulationMap.get(activityFacility.getId()));
+			opportunities.addActivityFacility(activityFacility);
+		}
+		scenario.getConfig().facilities().setFacilitiesSource(FacilitiesConfigGroup.FacilitiesSource.setInScenario);
+		// End opportunities
+		
+		
+		// Accessibility settings
+		AccessibilityConfigGroup acg = ConfigUtils.addOrGetModule(config, AccessibilityConfigGroup.class);
+		acg.setMeasuringPointsFacilities(zoneCentroids);
+		acg.setAreaOfAccessibilityComputation(AreaOfAccesssibilityComputation.fromFacilitiesObject);
+		acg.setCellSizeCellBasedAccessibility(500); // TODO This should not be necessary here
+		acg.setUseOpportunityWeights(true);
+		acg.setWeightExponent(1.2); // This corresponds to SILO's alpha
+		
+		ConfigUtils.setVspDefaults(config);
+		// End accessibility settings
+		
 		Controler controler = new Controler(scenario);
 		
-//		// new
-////		for (String activityType : activityTypes) {
-//			AccessibilityModule module = new AccessibilityModule();
-//			module.setConsideredActivityType("populationFacility");
-////			module.addAdditionalFacilityData(densityFacilities);
-////			module.setPushing2Geoserver(push2Geoserver);
-//			controler.addOverridingModule(module);
-////		}
-//		// end new
-				
+		// Accessibility module
+		AccessibilityModule module = new AccessibilityModule();
+		module.addFacilityDataExchangeListener(accessibility);
+		controler.addOverridingModule(module);
+		// End accessibility module
 		
 		controler.run();
 		LOG.warn("Running MATSim transport model for year " + year + " finished.");
@@ -178,7 +171,6 @@ public final class MatsimTransportModel implements TransportModelI  {
 	}
 
     /**
-     *
      * @param eventsFile
      */
 	public void replayFromEvents(String eventsFile) {
@@ -206,8 +198,7 @@ public final class MatsimTransportModel implements TransportModelI  {
 //		if (config.transit().isUseTransit() && Properties.get().main.implementation == Implementation.MUNICH) {
 //			MatsimPTDistances matsimPTDistances = new MatsimPTDistances(config, scenario, (GeoDataMuc) dataContainer.getGeoData());
 //		}
-		travelTimes.update(tripRouter, dataContainer.getGeoData().getZones().values(),
-				scenario.getNetwork(), leastCoastPathTree);
+		travelTimes.update(tripRouter, dataContainer.getGeoData().getZones().values(), scenario.getNetwork(), leastCoastPathTree);
 		
 //		tripRouter = controler.getTripRouterProvider().get();
 	}
