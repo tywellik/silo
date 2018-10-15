@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.ResourceBundle;
 
@@ -178,7 +179,19 @@ public class SummarizeData {
         }
         return popByZone;
     }
-
+    
+    public static Map<Integer, Integer> getPopulationByZoneAsMap(SiloDataContainer dataContainer) {
+    	Map<Integer, Integer> zonePopulationMap = new HashMap<>();
+    	for (int zone : dataContainer.getGeoData().getZones().keySet()) {
+    		zonePopulationMap.put(zone, 0);
+    	}
+    	
+        for (Household hh : dataContainer.getHouseholdData().getHouseholds()) {
+            final int zone = dataContainer.getRealEstateData().getDwelling(hh.getDwellingId()).getZoneId();
+            zonePopulationMap.put(zone, zonePopulationMap.get(zone) + hh.getHhSize());
+        }
+        return zonePopulationMap;
+    }
 
     public static void scaleMicroDataToExogenousForecast(int year, SiloDataContainer dataContainer) {
         //TODO Will fail for new zones with 0 households and a projected growth. Could be an issue when modeling for Zones with transient existence.
