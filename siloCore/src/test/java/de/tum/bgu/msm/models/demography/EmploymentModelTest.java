@@ -11,7 +11,6 @@ import de.tum.bgu.msm.data.job.Job;
 import de.tum.bgu.msm.data.job.JobUtils;
 import de.tum.bgu.msm.data.person.*;
 import de.tum.bgu.msm.data.travelTimes.SkimTravelTimes;
-import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.utils.TravelTimeUtil;
 import org.junit.Assert;
@@ -45,8 +44,6 @@ public class EmploymentModelTest {
         dataContainer.getHouseholdData().addPersonToHousehold(person1, household1);
         person1.setRole(PersonRole.SINGLE);
         TravelTimeUtil.updateCarSkim((SkimTravelTimes) dataContainer.getTravelTimes(), 2000, Properties.get());
-        SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
-        accessibility.initialize();
     }
 
     @Test

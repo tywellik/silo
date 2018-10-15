@@ -3,10 +3,8 @@ package de.tum.bgu.msm.models.accessibility;
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
 import cern.jet.math.tdouble.DoubleFunctions;
-import com.pb.common.datafile.TableDataSet;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.properties.Properties;
-import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.GeoData;
 import de.tum.bgu.msm.data.Location;
 import de.tum.bgu.msm.data.Region;
@@ -46,7 +44,7 @@ public class SkimBasedAccessibility implements Accessibility {
     private final SiloDataContainer dataContainer;
     private final TravelTimes travelTimes;
 
-    private float[] workTLFD;
+    // private float[] workTLFD;
 
     public SkimBasedAccessibility(SiloDataContainer dataContainer) {
         this.geoData = dataContainer.getGeoData();
@@ -65,16 +63,17 @@ public class SkimBasedAccessibility implements Accessibility {
         this.travelTimes = dataContainer.getTravelTimes();
     }
 
-    /**
-     * Initializes the accessibility object by reading trip length distributions
-     * and zone to region travel times. Travel times should therefore
-     * be read/updated _BEFORE_ this method is called.
-     */
-    public void initialize() {
-        LOGGER.info("Initializing trip length frequency distributions");
-        readWorkTripLengthFrequencyDistribution();
-    }
+//    /**
+//     * Initializes the accessibility object by reading trip length distributions
+//     * and zone to region travel times. Travel times should therefore
+//     * be read/updated _BEFORE_ this method is called.
+//     */
+//    public void initialize() {
+//        LOGGER.info("Initializing trip length frequency distributions");
+//        readWorkTripLengthFrequencyDistribution();
+//    }
 
+    @Override
     public void calculateHansenAccessibilities(int year) {
         LOGGER.info("  Calculating accessibilities for " + year);
         final DoubleMatrix1D population = SummarizeData.getPopulationByZone(dataContainer);
@@ -158,27 +157,27 @@ public class SkimBasedAccessibility implements Accessibility {
                 travelTime > 0 ? Math.pow(population.getQuick(destination), alpha) * Math.exp(beta * travelTime) : 0);
     }
 
-    private void readWorkTripLengthFrequencyDistribution() {
-        String fileName = Properties.get().main.baseDirectory + Properties.get().accessibility.htsWorkTLFD;
-        TableDataSet tlfd = SiloUtil.readCSVfile(fileName);
-        workTLFD = new float[tlfd.getRowCount() + 1];
-        for (int row = 1; row <= tlfd.getRowCount(); row++) {
-            int tt = (int) tlfd.getValueAt(row, "TravelTime");
-            if (tt > workTLFD.length) {
-                LOGGER.error("Inconsistent trip length frequency in " + Properties.get().main.baseDirectory +
-                        Properties.get().accessibility.htsWorkTLFD + ": " + tt + ". Provide data in 1-min increments.");
-            }
-            workTLFD[tt] = tlfd.getValueAt(row, "utility");
-        }
-    }
-
-    public float getCommutingTimeProbability(int minutes) {
-        if (minutes < workTLFD.length) {
-            return workTLFD[minutes];
-        } else {
-            return 0;
-        }
-    }
+//    private void readWorkTripLengthFrequencyDistribution() {
+//        String fileName = Properties.get().main.baseDirectory + Properties.get().accessibility.htsWorkTLFD;
+//        TableDataSet tlfd = SiloUtil.readCSVfile(fileName);
+//        workTLFD = new float[tlfd.getRowCount() + 1];
+//        for (int row = 1; row <= tlfd.getRowCount(); row++) {
+//            int tt = (int) tlfd.getValueAt(row, "TravelTime");
+//            if (tt > workTLFD.length) {
+//                LOGGER.error("Inconsistent trip length frequency in " + Properties.get().main.baseDirectory +
+//                        Properties.get().accessibility.htsWorkTLFD + ": " + tt + ". Provide data in 1-min increments.");
+//            }
+//            workTLFD[tt] = tlfd.getValueAt(row, "utility");
+//        }
+//    }
+//
+//    public float getCommutingTimeProbability(int minutes) {
+//        if (minutes < workTLFD.length) {
+//            return workTLFD[minutes];
+//        } else {
+//            return 0;
+//        }
+//    }
 
 
     private DoubleMatrix2D getPeakTravelTimeMatrix(String mode) {

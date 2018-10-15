@@ -11,6 +11,7 @@ import de.tum.bgu.msm.data.household.IncomeCategory;
 import de.tum.bgu.msm.events.impls.household.MoveEvent;
 import de.tum.bgu.msm.models.AbstractModel;
 import de.tum.bgu.msm.models.accessibility.Accessibility;
+import de.tum.bgu.msm.models.CommutingTimeModel;
 import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 
@@ -29,6 +30,7 @@ public abstract class AbstractDefaultMovesModel extends AbstractModel implements
 
     protected final GeoData geoData;
     protected final Accessibility accessibility;
+    protected final CommutingTimeModel commutingTimeModel;
 
     private double[] averageHousingSatisfaction;
     private MovesOrNotJSCalculator movesOrNotJSCalculator;
@@ -37,10 +39,11 @@ public abstract class AbstractDefaultMovesModel extends AbstractModel implements
 
     protected int year;
 
-    public AbstractDefaultMovesModel(SiloDataContainer dataContainer, Accessibility accessibility) {
+    public AbstractDefaultMovesModel(SiloDataContainer dataContainer, Accessibility accessibility, CommutingTimeModel commutingTimeModel) {
         super(dataContainer);
         this.geoData = dataContainer.getGeoData();
         this.accessibility = accessibility;
+        this.commutingTimeModel = commutingTimeModel;
         setupMoveOrNotMove();
         setupEvaluateDwellings();
         setupSelectRegionModel();

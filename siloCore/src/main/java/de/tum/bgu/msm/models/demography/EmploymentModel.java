@@ -2,7 +2,7 @@ package de.tum.bgu.msm.models.demography;
 
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
-import de.tum.bgu.msm.models.accessibility.Accessibility;
+import de.tum.bgu.msm.models.CommutingTimeModel;
 import de.tum.bgu.msm.data.household.Household;
 import de.tum.bgu.msm.data.person.Occupation;
 import de.tum.bgu.msm.data.Zone;
@@ -30,12 +30,12 @@ public class EmploymentModel extends AbstractModel implements MicroEventModel<Em
 
     private final static Logger LOGGER = Logger.getLogger(EmploymentModel.class);
 
-    private final Accessibility accessibility;
+    private final CommutingTimeModel commutingTimeModel;
     private float[][] laborParticipationShares;
 
-    public EmploymentModel(SiloDataContainer dataContainer, Accessibility accessibility) {
+    public EmploymentModel(SiloDataContainer dataContainer, CommutingTimeModel commutingTimeModel) {
         super(dataContainer);
-        this.accessibility = accessibility;
+        this.commutingTimeModel = commutingTimeModel;
         calculateInitialLaborParticipation();
     }
 
@@ -60,7 +60,7 @@ public class EmploymentModel extends AbstractModel implements MicroEventModel<Em
             zone = dataContainer.getGeoData().getZones().get(dwelling.getZoneId());
         }
         final int idVacantJob = dataContainer.getJobData().findVacantJob(zone, dataContainer.getGeoData().getRegions().values(),
-                accessibility);
+        		commutingTimeModel);
         return dataContainer.getJobData().getJobFromId(idVacantJob);
     }
 
