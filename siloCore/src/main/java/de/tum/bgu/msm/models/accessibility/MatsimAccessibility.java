@@ -49,7 +49,7 @@ public class MatsimAccessibility implements Accessibility, FacilityDataExchangeI
 
 	// Accessibility interface methods
 	@Override
-    public void calculateHansenAccessibilities(int year) {
+    public void getHansenAccessibilities(int year) {
 		LOG.info("Prepare accessibility data structure for SILO.");
 		for (Tuple<ActivityFacility, Double> tuple : accessibilitiesMap.keySet()) {
 			if (tuple.getSecond() == 8 * 60. * 60.) { // TODO Need to make this more flexible
