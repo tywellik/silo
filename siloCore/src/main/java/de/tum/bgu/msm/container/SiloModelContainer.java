@@ -149,7 +149,7 @@ public class SiloModelContainer {
                                                               Properties properties) {
 
         TransportModelI transportModel = null;
-        Accessibility accesibility;
+        Accessibility accesibility = null;
         CommutingTimeModel commutingTimeModel = new CommutingTimeModel();
         
         switch (properties.transportModel.transportModelIdentifier) {
