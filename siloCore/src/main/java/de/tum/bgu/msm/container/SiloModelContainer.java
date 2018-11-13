@@ -148,37 +148,33 @@ public class SiloModelContainer {
     public static SiloModelContainer createSiloModelContainer(SiloDataContainer dataContainer, Config matsimConfig,
                                                               Properties properties) {
 
-        boolean runMatsim = properties.transportModel.runMatsim;
-        boolean runTravelDemandModel = properties.transportModel.runTravelDemandModel;
-
-        TransportModelI transportModel;
+        TransportModelI transportModel = null;
         Accessibility accesibility;
         CommutingTimeModel commutingTimeModel = new CommutingTimeModel();
-        if (runMatsim && (runTravelDemandModel || properties.main.createMstmOutput)) {
-            throw new RuntimeException("trying to run both MATSim and MSTM is inconsistent at this point.");
-        }
-        if (runMatsim) {
-            LOGGER.info("  MATSim is used as the transport model");
-            ActivityFacilities zoneCentroids = FacilitiesUtils.createActivityFacilities();
-            ActivityFacilitiesFactory aff = new ActivityFacilitiesFactoryImpl();
-            Map<Integer, Zone> zoneMap = dataContainer.getGeoData().getZones();
-            for (int zoneId : zoneMap.keySet()) {
-            	Geometry geometry = (Geometry) zoneMap.get(zoneId).getZoneFeature().getDefaultGeometry();
-            	Coord centroid = CoordUtils.createCoord(geometry.getCentroid().getX(), geometry.getCentroid().getY());
-            	ActivityFacility activityFacility = aff.createActivityFacility(Id.create(zoneId, ActivityFacility.class), centroid);
-            	zoneCentroids.addActivityFacility(activityFacility);
-            }
-            accesibility = new MatsimAccessibility(dataContainer);
-            transportModel = new MatsimTransportModel(dataContainer, matsimConfig, zoneCentroids, ((MatsimAccessibility) accesibility));
-        } else {
-            if (runTravelDemandModel) {
+        
+        switch (properties.transportModel.transportModelIdentifier) {
+            case MITO:
                 LOGGER.info("  MITO is used as the transport model");
-                transportModel = new MitoTransportModel(Properties.get().main.baseDirectory, dataContainer);
-            } else {
+                transportModel = new MitoTransportModel(properties.main.baseDirectory, dataContainer);
+                break;
+            case MATSIM:
+                LOGGER.info("  MATSim is used as the transport model");
+                ActivityFacilities zoneCentroids = FacilitiesUtils.createActivityFacilities();
+           		ActivityFacilitiesFactory aff = new ActivityFacilitiesFactoryImpl();
+           	    Map<Integer, Zone> zoneMap = dataContainer.getGeoData().getZones();
+            	for (int zoneId : zoneMap.keySet()) {
+            		Geometry geometry = (Geometry) zoneMap.get(zoneId).getZoneFeature().getDefaultGeometry();
+            		Coord centroid = CoordUtils.createCoord(geometry.getCentroid().getX(), geometry.getCentroid().getY());
+            		ActivityFacility activityFacility = aff.createActivityFacility(Id.create(zoneId, ActivityFacility.class), centroid);
+            		zoneCentroids.addActivityFacility(activityFacility);
+            	}
+            	accesibility = new MatsimAccessibility(dataContainer);
+            	transportModel = new MatsimTransportModel(dataContainer, matsimConfig, zoneCentroids,
+            		((MatsimAccessibility) accesibility),properties);
+//                transportModel = new MatsimTransportModel(dataContainer, matsimConfig, properties);
+                break;
+            case NONE:
                 LOGGER.info(" No transport model is used");
-                transportModel = null;
-            }
-            accesibility = new SkimBasedAccessibility(dataContainer);
         }
 
         DeathModel death = new DeathModel(dataContainer);

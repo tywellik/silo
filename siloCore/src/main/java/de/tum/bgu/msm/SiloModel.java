@@ -35,6 +35,7 @@ import de.tum.bgu.msm.models.CommutingTimeModel;
 import de.tum.bgu.msm.models.accessibility.MatsimAccessibility;
 import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.properties.Properties;
+import de.tum.bgu.msm.properties.modules.TransportModelPropertiesModule;
 import de.tum.bgu.msm.utils.SiloUtil;
 import de.tum.bgu.msm.utils.TravelTimeUtil;
 import de.tum.bgu.msm.utils.TimeTracker;
@@ -43,6 +44,8 @@ import org.matsim.core.config.Config;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static de.tum.bgu.msm.properties.modules.TransportModelPropertiesModule.TransportModelIdentifier.NONE;
 
 /**
  * @author Greg Erhardt
@@ -120,7 +123,7 @@ public final class SiloModel {
     }
 
     private void setupTravelTimes() {
-		if (properties.transportModel.runMatsim) {
+		if (properties.transportModel.transportModelIdentifier == TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
 		    if (properties.transportModel.matsimInitialEventsFile == null) {
                 modelContainer.getTransportModel().runTransportModel(properties.main.startYear);
             } else {
@@ -130,11 +133,11 @@ public final class SiloModel {
                 // care that also accessibilities are computed
             }
 		} else {
-			updateTravelTimes(properties.main.startYear);
+			updateSkims(properties.main.startYear);
 		}
 	}
 
-	private void updateTravelTimes(int year) {
+	private void updateSkims(int year) {
 		TravelTimeUtil.updateCarSkim((SkimTravelTimes) data.getTravelTimes(),
 				year, properties);
 		TravelTimeUtil.updateTransitSkim((SkimTravelTimes) data.getTravelTimes(),
@@ -147,7 +150,7 @@ public final class SiloModel {
     }
 
     private void setupAccessibility() {
-    	if (!properties.transportModel.runMatsim) {
+		if (properties.transportModel.transportModelIdentifier != TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
     		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
     		accessibility.updateHansenAccessibilities(properties.main.startYear);
     	}
@@ -159,7 +162,7 @@ public final class SiloModel {
 		if (!scalingYears.isEmpty()) {
 			SummarizeData.readScalingYearControlTotals();
 		}
-		tdmYears.addAll(properties.transportModel.modelYears);
+		tdmYears.addAll(properties.transportModel.transportModelYears);
 		skimYears.addAll(properties.accessibility.skimYears);
 	}
 
@@ -237,24 +240,25 @@ public final class SiloModel {
 			}
 			timeTracker.recordAndReset("setupJobChange");
 
-			if (skimYears.contains(year) &&
-                    !tdmYears.contains(year) &&
-					!properties.transportModel.runTravelDemandModel &&
-					year != properties.main.startYear &&
-                    !properties.transportModel.runMatsim) {
-                    updateTravelTimes(year);
-            }
-			if (!properties.transportModel.runMatsim) {
-	    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
-	    		accessibility.updateHansenAccessibilities(year);
-			} else {
-				MatsimAccessibility accessibility = (MatsimAccessibility) modelContainer.getAcc();
-				accessibility.updateHansenAccessibilities(year);
-				// The accessibilities are computed whenever MATSim is run. To do scaling, however, this step is
-				// necessary as all accessibility values ahve to be known to do this
-				// TODO The population (i.e. the accessibility weight for SILO) would actually need to be updated
-			} 
-			timeTracker.recordAndReset("calcAccessibilities");
+//			TODO: Following lines gone in master branch. Check if correct
+//			if (skimYears.contains(year) &&
+//                    !tdmYears.contains(year) &&
+//					!properties.transportModel.runTravelDemandModel &&
+//					year != properties.main.startYear &&
+//                    !properties.transportModel.runMatsim) {
+//                    updateTravelTimes(year);
+//            }
+//			if (properties.transportModel.transportModelIdentifier == TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
+//	    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
+//	    		accessibility.updateHansenAccessibilities(year);
+//			} else {
+//				MatsimAccessibility accessibility = (MatsimAccessibility) modelContainer.getAcc();
+//				accessibility.updateHansenAccessibilities(year);
+//				// The accessibilities are computed whenever MATSim is run. To do scaling, however, this step is
+//				// necessary as all accessibility values ahve to be known to do this
+//				// TODO The population (i.e. the accessibility weight for SILO) would actually need to be updated
+//			} 
+//			timeTracker.recordAndReset("calcAccessibilities");
 
 			modelContainer.getDdOverwrite().addDwellings(year);
             timeTracker.recordAndReset("addOverwriteDwellings");
@@ -277,7 +281,7 @@ public final class SiloModel {
 			timeTracker.reset();
 			int[] carChangeCounter = modelContainer.getUpdateCarOwnershipModel().updateCarOwnership(householdData.getUpdatedHouseholds());
 			householdData.clearUpdatedHouseholds();
-			timeTracker.record("updateCarOwnership");
+			timeTracker.recordAndReset("updateCarOwnership");
 
 
 			int avSwitchCounter = 0;
@@ -285,26 +289,22 @@ public final class SiloModel {
 				timeTracker.reset();
 				avSwitchCounter = modelContainer.getSwitchToAutonomousVehicleModel().switchToAV(householdData.getConventionalCarsHouseholds(), year);
 				householdData.clearConventionalCarsHouseholds();
-				timeTracker.record("switchToAV");
+				timeTracker.recordAndReset("switchToAV");
 			}
 
 
-			if (properties.transportModel.runMatsim || properties.transportModel.runTravelDemandModel || properties.main.createMstmOutput) {
-                if (tdmYears.contains(year + 1)) {
-					timeTracker.reset();
+			if (properties.transportModel.transportModelIdentifier != NONE && tdmYears.contains(year + 1)) {
                     modelContainer.getTransportModel().runTransportModel(year + 1);
 					timeTracker.recordAndReset("transportModel");
-					if (!properties.transportModel.runMatsim) {
+					if (properties.transportModel.transportModelIdentifier == TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
 			    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
 			    		accessibility.updateHansenAccessibilities(year + 1);
+			    		timeTracker.recordAndReset("calcAccessibilities");
 					} // TODO Consider MATSim case?
-					timeTracker.record("calcAccessibilities");
                 }
             }
 
 
-
-			timeTracker.reset();
 			modelContainer.getPrm().updatedRealEstatePrices();
 			timeTracker.record("updateRealEstatePrices");
 

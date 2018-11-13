@@ -602,7 +602,7 @@ public class SyntheticPopUs implements SyntheticPopI {
                 if (numberOfJobsInThisZone > 0) {
                 	Zone homeZone = geoData.getZones().get(homeTaz);
                 	Zone destinationZone = zone;
-                    int distance = (int) (travelTimes.getTravelTime(homeZone, destinationZone, Properties.get().main.peakHour, "car") + 0.5);
+                    int distance = (int) (travelTimes.getTravelTime(homeZone, destinationZone, Properties.get().transportModel.peakHour_s, "car") + 0.5);
                     zoneProbabilities.put(zone, commutingTimeModel.getCommutingTimeProbability(distance) * (double) numberOfJobsInThisZone);
                 } else {
                     zoneProbabilities.put(zone, 0.);

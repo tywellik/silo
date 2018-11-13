@@ -8,6 +8,8 @@ package de.tum.bgu.msm.models.relocation.munich;
 
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import de.tum.bgu.msm.data.job.Job;
+import de.tum.bgu.msm.properties.Properties;
+import de.tum.bgu.msm.properties.modules.TransportModelPropertiesModule;
 import de.tum.bgu.msm.utils.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.*;
@@ -24,7 +26,6 @@ import de.tum.bgu.msm.models.accessibility.Accessibility;
 import de.tum.bgu.msm.models.relocation.AbstractDefaultMovesModel;
 import de.tum.bgu.msm.models.relocation.SelectDwellingJSCalculator;
 import de.tum.bgu.msm.models.relocation.SelectRegionJSCalculator;
-import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.util.matrices.Matrices;
 import org.matsim.api.core.v01.TransportMode;
 
@@ -153,7 +154,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
             if (workZones != null) {
                 for (Zone workZone : workZones) {
                     int timeFromZoneToRegion = (int) dataContainer.getTravelTimes().getTravelTimeToRegion(
-                    		workZone, region, Properties.get().main.peakHour, TransportMode.car);
+                    		workZone, region, Properties.get().transportModel.peakHour_s, TransportMode.car);
                     thisRegionFactor = thisRegionFactor * commutingTimeModel.getCommutingTimeProbability(timeFromZoneToRegion);
                 }
             }
