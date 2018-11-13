@@ -16,7 +16,6 @@ public class TransportModelPropertiesModule {
     public final String demandModelPropertiesPath;
 
     public final boolean runMatsim;
-    public final String matsimZoneShapeFile;
     public final String matsimZoneCRS;
     public final String matsimZoneShapeIdField;
     public final String matsimInitialEventsFile;
@@ -33,7 +32,6 @@ public class TransportModelPropertiesModule {
 
         PropertiesUtil.newPropertySubmodule("Transport - silo-matsim");
         runMatsim = PropertiesUtil.getBooleanProperty(bundle, "matsim.run.travel.model", false);
-        matsimZoneShapeFile = PropertiesUtil.getStringProperty(bundle, "matsim.zones.shapefile", "input/zonesShapefile/zones.shp");
         matsimZoneCRS = PropertiesUtil.getStringProperty(bundle, "matsim.zones.crs", "EPSG:4326");
         matsimZoneShapeIdField = PropertiesUtil.getStringProperty(bundle, "matsim.zones.sahape.id.field", "id");
         matsimInitialEventsFile = PropertiesUtil.getStringProperty(bundle, "matsim.initial.events", null);
