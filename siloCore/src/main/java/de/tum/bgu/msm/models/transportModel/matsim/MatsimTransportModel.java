@@ -106,8 +106,8 @@ public final class MatsimTransportModel implements TransportModelI  {
 //		int numberOfCalcPoints = 1;
 		boolean writePopulation = false;
 
-//		double populationScalingFactor = 0.01;
-		double populationScalingFactor = 1.; // For test
+		double populationScalingFactor = 0.01;
+//		double populationScalingFactor = 1.; // For test
 		
 		// people working at non-peak times (only peak traffic is simulated), and people going by a mode other
 		// than car in case a car is still available to them

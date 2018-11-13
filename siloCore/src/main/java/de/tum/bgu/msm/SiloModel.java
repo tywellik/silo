@@ -61,7 +61,7 @@ public final class SiloModel {
 	private SiloDataContainer data;
 	private final Config matsimConfig;
     private MicroSimulation microSim;
-    private TimeTracker timeTracker = new TimeTracker();
+    private final TimeTracker timeTracker = new TimeTracker();
 
     public SiloModel(Properties properties) {
 		this(null, properties) ;
@@ -75,12 +75,19 @@ public final class SiloModel {
 	}
 
 	public void runModel() {
-		if (!properties.main.runSilo) {
-			return;
+		logger.info("Scenario: " + properties.main.scenarioName + ", Simulation start year: " + properties.main.startYear);
+		long startTime = System.currentTimeMillis();
+		try{
+			setupModel();
+			runYearByYear();
+			endSimulation();
+		} catch (Exception e){
+			logger.error("Error running SILO.");
+			throw new RuntimeException(e);
+		} finally {
+			SiloUtil.closeAllFiles(startTime, timeTracker);
 		}
-		setupModel();
-		runYearByYear();
-		endSimulation();
+
 	}
 
 	private void setupModel() {
@@ -93,9 +100,7 @@ public final class SiloModel {
         setupMicroSim();
         IssueCounter.logIssues(data.getGeoData());
 
-        if (properties.main.writeSmallSynpop) {
-            data.getHouseholdData().writeOutSmallSynPop();
-        }
+
 		if (properties.main.createPrestoSummary) {
 			SummarizeData.preparePrestoSummary(data.getGeoData());
 		}
@@ -144,7 +149,7 @@ public final class SiloModel {
     private void setupAccessibility() {
     	if (!properties.transportModel.runMatsim) {
     		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
-    		accessibility.getHansenAccessibilities(properties.main.startYear);
+    		accessibility.updateHansenAccessibilities(properties.main.startYear);
     	}
     	// In MATSim case, this is done by running the MATSim model
     }
@@ -241,10 +246,10 @@ public final class SiloModel {
             }
 			if (!properties.transportModel.runMatsim) {
 	    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
-	    		accessibility.getHansenAccessibilities(year);
+	    		accessibility.updateHansenAccessibilities(year);
 			} else {
 				MatsimAccessibility accessibility = (MatsimAccessibility) modelContainer.getAcc();
-				accessibility.getHansenAccessibilities(year);
+				accessibility.updateHansenAccessibilities(year);
 				// The accessibilities are computed whenever MATSim is run. To do scaling, however, this step is
 				// necessary as all accessibility values ahve to be known to do this
 				// TODO The population (i.e. the accessibility weight for SILO) would actually need to be updated
@@ -291,11 +296,13 @@ public final class SiloModel {
 					timeTracker.recordAndReset("transportModel");
 					if (!properties.transportModel.runMatsim) {
 			    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
-			    		accessibility.getHansenAccessibilities(year + 1);
+			    		accessibility.updateHansenAccessibilities(year + 1);
 					} // TODO Consider MATSim case?
 					timeTracker.record("calcAccessibilities");
                 }
             }
+
+
 
 			timeTracker.reset();
 			modelContainer.getPrm().updatedRealEstatePrices();

@@ -74,7 +74,7 @@ public class SkimBasedAccessibility implements Accessibility {
 //    }
 
     @Override
-    public void getHansenAccessibilities(int year) {
+    public void updateHansenAccessibilities(int year) {
         LOGGER.info("  Calculating accessibilities for " + year);
         final DoubleMatrix1D population = SummarizeData.getPopulationByZone(dataContainer);
 

@@ -3,11 +3,16 @@ package de.tum.bgu.msm.properties;
 import de.tum.bgu.msm.Implementation;
 import de.tum.bgu.msm.properties.modules.*;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
 public final class Properties {
 
     private static Properties instance;
+
 
     public static Properties get() {
         if(instance == null) {
@@ -16,13 +21,15 @@ public final class Properties {
         return instance;
     }
 
-    public static Properties initializeProperties(ResourceBundle bundle, Implementation implementation) {
+    public static Properties initializeProperties(String path, Implementation implementation) {
+
         if(instance != null) {
             throw new RuntimeException("Already initialized properties!");
         }
-        instance = new Properties(bundle, implementation);
+        instance = new Properties(path, implementation);
         return instance;
     }
+
 
     public final MainProperties main;
     public final TransportModelPropertiesModule transportModel;
@@ -35,9 +42,19 @@ public final class Properties {
     public final AccessibilityProperties accessibility;
     public final MovesProperties moves;
     public final TrackProperties track;
+    private final String path;
 
-    private Properties(ResourceBundle bundle, Implementation implementation) {
-        main = new MainProperties(bundle, implementation);
+    private Properties(String path, Implementation implementation) {
+        this.path = path;
+        File propFile = new File(this.path);
+        ResourceBundle bundle = null;
+        try {
+            bundle = new PropertyResourceBundle(new FileReader(propFile));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        main = new MainProperties(propFile.getParent(), bundle, implementation);
         transportModel = new TransportModelPropertiesModule(bundle);
         geo = new GeoProperties(bundle, implementation);
         realEstate = new RealEstateProperties(bundle);
@@ -48,5 +65,17 @@ public final class Properties {
         accessibility = new AccessibilityProperties(bundle, main.startYear);
         moves = new MovesProperties(bundle);
         track = new TrackProperties(bundle);
+
+
+
+        // copy properties file into scenarios directory
+
+
+//        copyFile(baseDirectory + resourceBundleNames[0], baseDirectory + "scenOutput/" + scenarioName + "/" + prop[prop.length-1]);
+        // I don't see how this can work.  resourceBundleNames[0] is already the full path name, so if you prepend "baseDirectory"
+        // and it is not empty, the command cannot possibly work.  It may have worked by accident in the past if everybody
+        // had the resourceBundle directly at the JVM file system root.  kai (and possibly already changed by dz before), aug'16
+
+
     }
 }

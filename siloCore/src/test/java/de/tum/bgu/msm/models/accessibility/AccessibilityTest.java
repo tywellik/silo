@@ -1,5 +1,5 @@
 
-package de.tum.bgu.msm.data;
+package de.tum.bgu.msm.models.accessibility;
 
 import cern.colt.matrix.io.MatrixVectorWriter;
 import cern.colt.matrix.tdouble.DoubleFactory1D;
@@ -10,6 +10,10 @@ import cern.colt.matrix.tdouble.algo.DoubleFormatter;
 import de.tum.bgu.msm.Implementation;
 import de.tum.bgu.msm.utils.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
+import de.tum.bgu.msm.data.GeoData;
+import de.tum.bgu.msm.data.HouseholdDataManager;
+import de.tum.bgu.msm.data.Region;
+import de.tum.bgu.msm.data.Zone;
 import de.tum.bgu.msm.data.geo.RegionImpl;
 import de.tum.bgu.msm.data.geo.ZoneImpl;
 import de.tum.bgu.msm.data.household.HouseholdUtil;
@@ -38,14 +42,14 @@ public class AccessibilityTest {
     public void testZoneToZoneAccessiblities() {
         DoubleMatrix1D population = DoubleFactory1D.dense.ascending(10);
         DoubleMatrix2D travelTimes = DoubleFactory2D.dense.ascending(10, 10);
-        DoubleMatrix2D accessibilities = Accessibility.calculateZoneToZoneAccessibilities(population, travelTimes, 1.2, -0.3);
+        DoubleMatrix2D accessibilities = SkimBasedAccessibility.calculateZoneToZoneAccessibilities(population, travelTimes, 1.2, -0.3);
         Assert.assertEquals(12.799312461169375, accessibilities.zSum(), 0.);
     }
 
     @Test
     public void testScaleAccessibilities() {
         DoubleMatrix1D accessibility = DoubleFactory1D.dense.ascending(10);
-        Accessibility.scaleAccessibility(accessibility);
+        SkimBasedAccessibility.scaleAccessibility(accessibility);
         Assert.assertEquals(100., accessibility.getQuick(9), 0.);
         Assert.assertEquals(550, accessibility.zSum(), 0.);
     }
@@ -59,7 +63,7 @@ public class AccessibilityTest {
         DoubleMatrix2D accessibilitiesTransit = DoubleFactory2D.dense.descending(10, 10);
         DoubleMatrix1D accessibilityTransit = DoubleFactory1D.dense.make(10);
 
-        Accessibility.aggregateAccessibilities(accessibilitiesAuto, accessibilitiesTransit, accessibilityAuto, accessibilityTransit, keys);
+        SkimBasedAccessibility.aggregateAccessibilities(accessibilitiesAuto, accessibilitiesTransit, accessibilityAuto, accessibilityTransit, keys);
 
         Assert.assertEquals(5050., accessibilityAuto.zSum(), 0);
         Assert.assertEquals(4950., accessibilityTransit.zSum(), 0);
@@ -79,7 +83,7 @@ public class AccessibilityTest {
         DoubleMatrix1D accessibilityAuto = DoubleFactory1D.dense.make(4);
         accessibilityAuto.assign(10);
 
-        DoubleMatrix1D regionalAccessibility = Accessibility.calculateRegionalAccessibility(regions, accessibilityAuto);
+        DoubleMatrix1D regionalAccessibility = SkimBasedAccessibility.calculateRegionalAccessibility(regions, accessibilityAuto);
         Assert.assertEquals(3, regionalAccessibility.size());
         Assert.assertEquals(10, regionalAccessibility.getQuick(region1.getId()), 0.);
         Assert.assertEquals(10, regionalAccessibility.getQuick(region2.getId()), 0.);
@@ -87,7 +91,7 @@ public class AccessibilityTest {
 
     @Test
     public void testIntegration()  {
-        Properties properties = SiloUtil.siloInitialization("test/scenarios/annapolis/javaFiles/siloMstm.properties", Implementation.MARYLAND);
+        Properties properties = SiloUtil.siloInitialization(Implementation.MARYLAND, "test/scenarios/annapolis/javaFiles/siloMstm.properties");
 
         SiloDataContainer dataContainer = SiloDataContainer.loadSiloDataContainer(Properties.get());
         GeoData geoData = dataContainer.getGeoData();
@@ -104,9 +108,8 @@ public class AccessibilityTest {
         TravelTimeUtil.updateCarSkim((SkimTravelTimes) dataContainer.getTravelTimes(), 2000, Properties.get());
         TravelTimeUtil.updateTransitSkim((SkimTravelTimes) dataContainer.getTravelTimes(), 2000, Properties.get());
 
-        Accessibility accessibility = new Accessibility(dataContainer);
-        accessibility.initialize();
-        accessibility.calculateHansenAccessibilities(2000);
+        SkimBasedAccessibility accessibility = new SkimBasedAccessibility(dataContainer);
+        accessibility.updateHansenAccessibilities(2000);
 
         DoubleMatrix2D minTravelTimes = Matrices.doubleMatrix2D(geoData.getZones().values(), geoData.getRegions().values());
 
@@ -121,13 +124,13 @@ public class AccessibilityTest {
         DoubleMatrix1D accTransit = Matrices.doubleMatrix1D(geoData.getZones().values());
         DoubleMatrix1D accRegions = Matrices.doubleMatrix1D(geoData.getRegions().values());
 
-        for(int zone: geoData.getZones().keySet()) {
-            accCar.setQuick(zone, accessibility.getAutoAccessibilityForZone(zone));
-            accTransit.setQuick(zone, accessibility.getTransitAccessibilityForZone(zone));
+        for(Zone zone: geoData.getZones().values()) {
+            accCar.setQuick(zone.getId(), accessibility.getAutoAccessibilityForZone(zone));
+            accTransit.setQuick(zone.getId(), accessibility.getTransitAccessibilityForZone(zone));
         }
 
-        for(int region: geoData.getRegions().keySet()) {
-            accRegions.setQuick(region, accessibility.getRegionalAccessibility(region));
+        for(Region region: geoData.getRegions().values()) {
+            accRegions.setQuick(region.getId(), accessibility.getRegionalAccessibility(region));
         }
 
         Locale.setDefault(Locale.ENGLISH);

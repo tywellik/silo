@@ -1,6 +1,7 @@
 package de.tum.bgu.msm.properties.modules;
 
 
+import com.google.common.io.Files;
 import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.Implementation;
 import de.tum.bgu.msm.properties.PropertiesUtil;
@@ -12,20 +13,10 @@ import java.util.stream.Collectors;
 
 public class MainProperties {
 
-    public final boolean runSilo;
     public final String scenarioName;
 
     public final boolean trackTime;
-    public final String trackTimeFile;
-
     public final Set<Integer> scalingYears;
-
-    public final boolean readSmallSynpop;
-    public final boolean writeSmallSynpop;
-
-    public final String resultFileName;
-    public final String spatialResultFileName;
-
     public final boolean createMstmOutput;
     public final boolean createHousingEnvironmentImpactFile;
     public final boolean createPrestoSummary;
@@ -37,7 +28,6 @@ public class MainProperties {
     public final int[] incomeBrackets;
     public final int qualityLevels;
     public final int randomSeed;
-    public final int smallSynPopSize;
     public final String prestoZoneFile;
     public final String scaledMicroDataHh;
     public final String scaledMicroDataPp;
@@ -52,36 +42,25 @@ public class MainProperties {
     public final boolean runJobMicrolocation;
     public final boolean runSchoolMicrolocation;
 
-    public MainProperties(ResourceBundle bundle, Implementation implementation) {
+    public MainProperties(String propertiesBasePath, ResourceBundle bundle, Implementation implementation) {
 
         this.implementation = implementation;
 
         PropertiesUtil.newPropertySubmodule("Main properties");
-        runSilo = PropertiesUtil.getBooleanProperty(bundle, "run.silo.model", true);
         scenarioName = PropertiesUtil.getStringProperty(bundle, "scenario.name");
         //by omitting base directory one has to set up a working folder in intellij etc. which represents "." in the next line
         //add working directory as default value?
-        baseDirectory = PropertiesUtil.getStringProperty(bundle, "base.directory", "./");
+        baseDirectory = PropertiesUtil.getStringProperty(bundle, "base.directory", propertiesBasePath + "/");
         startYear = PropertiesUtil.getIntProperty(bundle, "start.year");
         endYear = PropertiesUtil.getIntProperty(bundle, "end.year");
         randomSeed = PropertiesUtil.getIntProperty(bundle, "random.seed", -1);
 
         PropertiesUtil.newPropertySubmodule("Main - runtime tracking");
         trackTime = PropertiesUtil.getBooleanProperty(bundle, "track.time", true);
-        trackTimeFile = PropertiesUtil.getStringProperty(bundle, "track.time.file","timeTracker.csv");
-
-        PropertiesUtil.newPropertySubmodule("Main - result files");
-        resultFileName = PropertiesUtil.getStringProperty(bundle, "result.file.name", "resultFile");
-        spatialResultFileName =  PropertiesUtil.getStringProperty(bundle,"spatial.result.file.name", "resultFileSpatial");
 
         PropertiesUtil.newPropertySubmodule("Main - dwelling and income input data");
         incomeBrackets = PropertiesUtil.getIntPropertyArray(bundle,"income.brackets.hh.types", new int[]{20000,40000,60000}); //munich implementation
         qualityLevels = PropertiesUtil.getIntProperty(bundle, "dwelling.quality.levels.distinguished", 4);
-
-        PropertiesUtil.newPropertySubmodule("Main synthetic population");
-        smallSynPopSize = PropertiesUtil.getIntProperty(bundle, "size.small.syn.pop", 0);
-        readSmallSynpop = PropertiesUtil.getBooleanProperty(bundle, "read.small.syn.pop", false);
-        writeSmallSynpop = PropertiesUtil.getBooleanProperty(bundle, "write.small.syn.pop", false);
 
         PropertiesUtil.newPropertySubmodule("Main microlocation");
         runDwellingMicrolocation = PropertiesUtil.getBooleanProperty(bundle, "run.dwelling.microlocation", false);
