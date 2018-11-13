@@ -32,6 +32,7 @@ import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.utils.collections.Tuple;
 import org.matsim.facilities.ActivityFacilities;
+import org.matsim.facilities.ActivityFacility;
 
 import java.util.Collection;
 import java.util.Map;
@@ -237,4 +238,31 @@ public class SiloMatsimUtils {
 		}	
 		return matrix;
 	}
+	
+	public static void determineExtentOfFacilities(ActivityFacilities activityFacilities) {
+		double xmin = Double.MAX_VALUE;
+		double xmax = Double.MIN_VALUE;
+		double ymin = Double.MAX_VALUE;
+		double ymax = Double.MIN_VALUE;
+		
+		for (ActivityFacility activityFacility : activityFacilities.getFacilities().values()) {	
+			LOG.warn("Opportinity coord = " + activityFacility.getCoord());
+			double x = activityFacility.getCoord().getX();
+			double y = activityFacility.getCoord().getY();
+			if (x < xmin) {
+				xmin = x;
+			}
+			if (x > xmax) {
+				xmax = x;
+			}
+			if (y < ymin) {
+				ymin = y;
+			}
+			if (y > ymax) {
+				ymax = y;
+			}
+		}
+		LOG.warn("xmin = " + xmin + "; xmax = " + xmax + "; ymin = " + ymin + "; ymax = " + ymax);
+	}
+
 }
