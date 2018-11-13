@@ -116,7 +116,7 @@ public class AccessibilityTest {
         for(Zone zone: geoData.getZones().values()) {
             for(Region region: geoData.getRegions().values()) {
                 minTravelTimes.setQuick(zone.getZoneId(), region.getId(),
-                		dataContainer.getTravelTimes().getTravelTimeToRegion(zone, region, Properties.get().main.peakHour, TransportMode.car));
+                		dataContainer.getTravelTimes().getTravelTimeToRegion(zone, region, Properties.get().transportModel.peakHour_s, TransportMode.car));
             }
         }
 
