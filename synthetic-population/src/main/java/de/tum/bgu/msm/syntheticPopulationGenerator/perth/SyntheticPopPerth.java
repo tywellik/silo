@@ -11,13 +11,6 @@ import de.tum.bgu.msm.data.job.Job;
 import de.tum.bgu.msm.data.job.JobType;
 import de.tum.bgu.msm.data.job.JobUtils;
 import de.tum.bgu.msm.data.person.*;
-<<<<<<< HEAD
-import de.tum.bgu.msm.data.travelTimes.SkimTravelTimes;
-import de.tum.bgu.msm.models.CommutingTimeModel;
-import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
-import de.tum.bgu.msm.models.autoOwnership.maryland.MaryLandUpdateCarOwnershipModel;
-=======
->>>>>>> refs/remotes/origin/master
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.syntheticPopulationGenerator.SyntheticPopI;
 import de.tum.bgu.msm.utils.SiloUtil;
@@ -33,9 +26,7 @@ import java.util.*;
  *
  */
 
-public class
-
-SyntheticPopPerth implements SyntheticPopI {
+public class SyntheticPopPerth implements SyntheticPopI {
 
     protected static final String PROPERTIES_RUN_SP                  = "run.synth.pop.generator";
     protected static final String PROPERTIES_PUMS_FAMILIES           = "pums.families";
@@ -48,18 +39,10 @@ SyntheticPopPerth implements SyntheticPopI {
     protected transient Logger logger = Logger.getLogger(SyntheticPopPerth.class);
 
     private ResourceBundle rb;
-<<<<<<< HEAD
-    private GeoDataMstm geoData;
-    private SkimBasedAccessibility accessibility;
-    private CommutingTimeModel commutingTimeModel;
-    private RealEstateDataManager realEstateDataManager;
-    private HouseholdDataManager householdDataManager;
-=======
     protected HashMap<Integer, int[]> tazByWorkZonePuma;
     protected HouseholdDataManager householdDataManager;
     protected RealEstateDataManager realEstateDataManager;
     protected JobDataManager jobDataManager;
->>>>>>> refs/remotes/origin/master
     private JobDataManager jobData;
     protected HashMap<Integer, int[]> vacantJobsByZone;
     private String baseDirectory;
@@ -89,24 +72,6 @@ SyntheticPopPerth implements SyntheticPopI {
         //todo: is 2006 the correct year?
         openFilesToWriteSyntheticPopulation(2006);
 //        createJobs();
-<<<<<<< HEAD
-//        geoData = (GeoDataMstm) dataContainer.getGeoData();
-//        geoData.readData();
-//        travelTimes = new SkimTravelTimes();
-//        accessibility = new Accessibility(dataContainer);                        // read in travel times and trip length frequency distribution
-        commutingTimeModel = new CommutingTimeModel();
-
-//        final String transitSkimFile = Properties.get().accessibility.transitSkimFile(Properties.get().main.startYear);
-//        travelTimes.readSkim(TransportMode.pt, transitSkimFile,
-//                    Properties.get().accessibility.transitPeakSkim, Properties.get().accessibility.skimFileFactorTransit);
-
-//        final String carSkimFile = Properties.get().accessibility.autoSkimFile(Properties.get().main.startYear);
-//        travelTimes.readSkim(TransportMode.car, carSkimFile,
-//                    Properties.get().accessibility.autoPeakSkim, Properties.get().accessibility.skimFileFactorCar);
-
-//        accessibility.initialize();
-=======
->>>>>>> refs/remotes/origin/master
         processMicroData();
 //        addVacantDwellings();
 //        logger.info ("  Total number of households created " + householdDataManager.getHouseholds().size());
@@ -651,7 +616,6 @@ SyntheticPopPerth implements SyntheticPopI {
 /*
     private int locateDwelling (int pumaZone) {
         // select TAZ within PUMA zone
-
         int[] zones = tazByPuma.get(pumaZone);
         float[] weights = new float[zones.length];
         for (int i = 0; i < zones.length; i++) weights[i] = hhDistribution.getIndexedValueAt(zones[i], "HH00");
@@ -673,96 +637,6 @@ SyntheticPopPerth implements SyntheticPopI {
         else price = 500;
         return price;
     }
-<<<<<<< HEAD
-
-
-    private int selectWorkplaceByTripLengthFrequencyDistribution (int workPumaZone, int workState, int homeTaz) {
-        // for some workers, a workzone is not specified in PUMS data. Select workplace based on trip length frequency distribution
-
-        // todo: A couple of issues deserve further attention:
-        // - People working in a RMZ are assigned -2 as workplace. Would be good to select external zones
-        // - People living in a RMZ but working in a SMZ are disregarded at this point. Therefore, 917,985 jobs remain vacant in base year
-        // - Full-time and part-time employees are not distinguished. Every employee occupies one job, even though jobs should be provided as full-time equivalents in MSTM.
-        // - Nobody explicitly works from home, though a couple of people will select a job in their home zone. Should be controlled by number of workers working from home.
-        // - School/University locations are not assigned as 'workplace' yet. Note that some worker have a job and go to school at the same time.
-
-        int fullPumaZone = workState * 100000 + workPumaZone;
-        if (!checkIfSimplifiedPumaInStudyArea(fullPumaZone) && workPumaZone != 0) {
-            return -2;  // person does work in puma zone outside of study area
-        }
-
-        Map<Zone, Double> zoneProbabilities = new HashMap<>();
-        for (Zone zone: geoData.getZones().values()) {
-            if (vacantJobsByZone.containsKey(zone.getZoneId())) {
-                int numberOfJobsInThisZone = vacantJobsByZone.get(zone.getZoneId()).length;
-                if (numberOfJobsInThisZone > 0) {
-                	Zone homeZone = geoData.getZones().get(homeTaz);
-                	Zone destinationZone = zone;
-                    int distance = (int) (travelTimes.getTravelTime(homeZone, destinationZone, Properties.get().main.peakHour, "car") + 0.5);
-                    zoneProbabilities.put(zone, commutingTimeModel.getCommutingTimeProbability(distance) * (double) numberOfJobsInThisZone);
-                } else {
-                    zoneProbabilities.put(zone, 0.);
-                }
-            } else {
-                zoneProbabilities.put(zone, 0.);
-            }
-        }
-
-        // in rare cases, no job within the common commute distance is available. Assign job location outside of MSTM area.
-        if (SiloUtil.getSum(zoneProbabilities.values()) == 0) {
-            return -2;
-        }
-
-        Zone selectedZone = SiloUtil.select(zoneProbabilities);
-        int[] jobsInThisZone = vacantJobsByZone.get(selectedZone.getZoneId());
-        int selectedJobIndex = SiloUtil.select(jobsInThisZone.length) - 1;
-        int[] newVacancies = SiloUtil.removeOneElementFromZeroBasedArray(jobsInThisZone, selectedJobIndex);
-        if (newVacancies.length > 0) {
-            vacantJobsByZone.put(selectedZone.getZoneId(), newVacancies);
-        } else {
-            vacantJobsByZone.remove(selectedZone.getZoneId());
-        }
-        return jobsInThisZone[selectedJobIndex];
-    }
-
-
-//    private int selectWorkplace (int pumaZone, int state) {
-//        // select a workplace within pumaZone based on PUMS data
-//        // Note: Not used as the allocation of work zones in PUMS data appears to be problematic.
-//        // Method 'selectWorkplaceByTripLengthFrequencyDistribution()' is used instead.
-//
-//        if (state > 56) return -2;     // Island area, Puerto Rico, foreign country, or at sea
-//        int fullPumaZone = state * 100000 + pumaZone;
-//
-//        if (!tazByWorkZonePuma.containsKey(fullPumaZone)) return -2;   // works outside MSTM study area
-//
-//        int [] zonesThisPuma = tazByWorkZonePuma.get(fullPumaZone);
-//        double[] weightZone = new double[zonesThisPuma.length];
-//        for (int i = 0; i < zonesThisPuma.length; i++) {
-//            if (vacantJobsByZone.containsKey(zonesThisPuma[i])) {
-//                weightZone[i] = vacantJobsByZone.get(zonesThisPuma[i]).length;
-//            } else {
-//                weightZone[i] = 0;
-//            }
-//        }
-//        if (SiloUtil.getSum(weightZone) == 0) {
-//            if (jobErrorCounter.containsKey(fullPumaZone)) {
-//                int count = jobErrorCounter.get(fullPumaZone);
-//                jobErrorCounter.put(fullPumaZone, count + 1);
-//            } else {
-//                jobErrorCounter.put(fullPumaZone, 1);
-//            }
-//            return -2;                 // make person unemployed because no job could be found
-//        }
-//        int selectedWorkZoneIndex = SiloUtil.select(weightZone);
-//        int[] jobsInThisZone = vacantJobsByZone.get(zonesThisPuma[selectedWorkZoneIndex]);
-//        int selectedJobIndex = SiloUtil.select(jobsInThisZone.length - 1);
-//        int[] newVacancies = SiloUtil.removeOneElementFromZeroBasedArray(jobsInThisZone, selectedJobIndex);
-//        vacantJobsByZone.put(zonesThisPuma[selectedWorkZoneIndex], newVacancies);
-//        return jobsInThisZone[selectedJobIndex];
-//    }
-=======
->>>>>>> refs/remotes/origin/master
 
 
     private Occupation translateOccupation (int pumsOccupation) {
@@ -818,9 +692,7 @@ SyntheticPopPerth implements SyntheticPopI {
 /*
     private void addVacantDwellings () {
         // PUMS generates too few vacant dwellings, add vacant dwellings to match vacancy rate
-
         logger.info("  Adding empty dwellings to match vacancy rate");
-
         HashMap<String, ArrayList<Integer>> ddPointer = new HashMap<>();
         // summarize vacancy
         final int highestZoneId = geoData.getZones().keySet().stream().max(Comparator.naturalOrder()).get();
@@ -842,11 +714,9 @@ SyntheticPopPerth implements SyntheticPopI {
                 ddPointer.put(code, dList);
             }
         }
-
         TableDataSet countyLevelVacancies = SiloUtil.readCSVfile(rb.getString(PROPERTIES_COUNTY_VACANCY_RATES));
         countyLevelVacancies.buildIndex(countyLevelVacancies.getColumnPosition("Fips"));
         double[] expectedVacancies = ResourceUtil.getDoubleArray(rb, PROPERTIES_VACANCY_RATES);
-
         for (Zone zone: geoData.getZones().values()) {
             int taz = zone.getZoneId();
             float vacRateCountyTarget;
