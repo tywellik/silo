@@ -28,6 +28,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationWriter;
+import org.matsim.contrib.accessibility.AccessibilityAttributes;
 import org.matsim.contrib.accessibility.AccessibilityConfigGroup;
 import org.matsim.contrib.accessibility.AccessibilityConfigGroup.AccessibilityMeasureType;
 import org.matsim.contrib.accessibility.AccessibilityConfigGroup.AreaOfAccesssibilityComputation;
@@ -53,6 +54,8 @@ import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
+
+import com.vividsolutions.jts.geom.Envelope;
 
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.SummarizeData;
@@ -143,10 +146,16 @@ public final class MatsimTransportModel implements TransportModelI  {
 			zonePopulationMap.put(Id.create(zoneId, ActivityFacility.class), populationMap.get(zoneId));
 		}
 		final ActivityFacilities opportunities = scenario.getActivityFacilities();
+		int i = 0;
 		for (ActivityFacility activityFacility : zoneCentroids.getFacilities().values()) {
-			activityFacility.getCustomAttributes().put("weight", zonePopulationMap.get(activityFacility.getId()));
+			activityFacility.getAttributes().putAttribute(AccessibilityAttributes.WEIGHT, zonePopulationMap.get(activityFacility.getId()));
 			opportunities.addActivityFacility(activityFacility);
+			i++;
 		}
+		LOG.warn(i + " facilities added as opportunities.");
+		
+		SiloMatsimUtils.determineExtentOfFacilities(zoneCentroids);
+		
 		scenario.getConfig().facilities().setFacilitiesSource(FacilitiesConfigGroup.FacilitiesSource.setInScenario);
 		// End opportunities
 		
@@ -155,10 +164,14 @@ public final class MatsimTransportModel implements TransportModelI  {
 		AccessibilityConfigGroup acg = ConfigUtils.addOrGetModule(config, AccessibilityConfigGroup.class);
 		acg.setMeasuringPointsFacilities(zoneCentroids);
 		acg.setAreaOfAccessibilityComputation(AreaOfAccesssibilityComputation.fromFacilitiesObject);
-		acg.setCellSizeCellBasedAccessibility(500); // TODO This should not be necessary here
 		acg.setUseOpportunityWeights(true);
-		acg.setWeightExponent(1.2); // This corresponds to SILO's alpha
+		acg.setWeightExponent(Properties.get().accessibility.alphaAuto); // TODO Need differentiation for different modes
+		LOG.warn("Properties.get().accessibility.alphaAuto = " + Properties.get().accessibility.alphaAuto);
 		acg.setAccessibilityMeasureType(AccessibilityMeasureType.rawSum);
+		
+		acg.setEnvelope(new Envelope(84076.02724856154 - 1000, 495114.4521283055 + 1000, 4120673.602727123 - 1000, 4458298.050819439 + 1000));
+		//
+		
 		
 		ConfigUtils.setVspDefaults(config);
 		// End accessibility settings
@@ -179,6 +192,7 @@ public final class MatsimTransportModel implements TransportModelI  {
         updateTravelTimes(controler.getTripRouterProvider().get(), travelTime, travelDisutility);
 	}
 
+	
     /**
      * @param eventsFile
      */
