@@ -346,7 +346,7 @@
         <dependency>
             <groupId>com.github.msmobility</groupId>
             <artifactId>mito</artifactId>
-            <version>master-SNAPSHOT</version>
+            <version>master</version>
             <!-- <version>0.3.0-SNAPSHOT</version> -->
             <!-- <version>vspbranch-2018-09-04</version> -->
             <!-- 		The jitpack version refers to the github branch.  Since you only have a master branch for mito, you can only use master-SNAPSHOT.  If
