@@ -149,16 +149,19 @@ public class SiloModelContainer {
                                                               Properties properties) {
 
         TransportModelI transportModel = null;
-        Accessibility accesibility = null;
+        Accessibility accessibility = null;
         CommutingTimeModel commutingTimeModel = new CommutingTimeModel();
         
         switch (properties.transportModel.transportModelIdentifier) {
             case MITO:
                 LOGGER.info("  MITO is used as the transport model");
+                accessibility = new SkimBasedAccessibility(dataContainer);
                 transportModel = new MitoTransportModel(properties.main.baseDirectory, dataContainer);
                 break;
             case MATSIM:
                 LOGGER.info("  MATSim is used as the transport model");
+                accessibility = new MatsimAccessibility(dataContainer);
+                
                 ActivityFacilities zoneCentroids = FacilitiesUtils.createActivityFacilities();
            		ActivityFacilitiesFactory aff = new ActivityFacilitiesFactoryImpl();
            	    Map<Integer, Zone> zoneMap = dataContainer.getGeoData().getZones();
@@ -168,13 +171,13 @@ public class SiloModelContainer {
             		ActivityFacility activityFacility = aff.createActivityFacility(Id.create(zoneId, ActivityFacility.class), centroid);
             		zoneCentroids.addActivityFacility(activityFacility);
             	}
-            	accesibility = new MatsimAccessibility(dataContainer);
+            	
             	transportModel = new MatsimTransportModel(dataContainer, matsimConfig, zoneCentroids,
-            		((MatsimAccessibility) accesibility),properties);
-//                transportModel = new MatsimTransportModel(dataContainer, matsimConfig, properties);
+            		((MatsimAccessibility) accessibility),properties);
                 break;
             case NONE:
                 LOGGER.info(" No transport model is used");
+                accessibility = new SkimBasedAccessibility(dataContainer);
         }
 
         DeathModel death = new DeathModel(dataContainer);
@@ -195,20 +198,20 @@ public class SiloModelContainer {
         SwitchToAutonomousVehicleModel switchToAutonomousVehicleModel = null;
         switch (Properties.get().main.implementation) {
             case MARYLAND:
-                updateCarOwnershipModel = new MaryLandUpdateCarOwnershipModel(dataContainer, accesibility);
-                move = new MovesModelMstm(dataContainer, accesibility, commutingTimeModel);
+                updateCarOwnershipModel = new MaryLandUpdateCarOwnershipModel(dataContainer, accessibility);
+                move = new MovesModelMstm(dataContainer, accessibility, commutingTimeModel);
                 break;
             case MUNICH:
                 createCarOwnershipModel = new CreateCarOwnershipModel(dataContainer,
                         (GeoDataMuc)dataContainer.getGeoData());
                 updateCarOwnershipModel = new MunichUpdateCarOwnerShipModel(dataContainer);
                 switchToAutonomousVehicleModel = new SwitchToAutonomousVehicleModel(dataContainer);
-                move = new MovesModelMuc(dataContainer, accesibility, commutingTimeModel);
+                move = new MovesModelMuc(dataContainer, accessibility, commutingTimeModel);
                 break;
             default:
                 throw new RuntimeException("Models not defined for implementation " + Properties.get().main.implementation);
         }
-        ConstructionModel cons = new ConstructionModel(dataContainer, move, accesibility, DwellingUtils.getFactory());
+        ConstructionModel cons = new ConstructionModel(dataContainer, move, accessibility, DwellingUtils.getFactory());
         EmploymentModel changeEmployment = new EmploymentModel(dataContainer, commutingTimeModel);
         updateCarOwnershipModel.initialize();
         LeaveParentHhModel lph = new LeaveParentHhModel(dataContainer, move, createCarOwnershipModel, HouseholdUtil.getFactory());
@@ -220,7 +223,7 @@ public class SiloModelContainer {
         DivorceModel divorce = new DivorceModel(dataContainer, move, createCarOwnershipModel, HouseholdUtil.getFactory());
 
         return new SiloModelContainer(iomig, cons, ddOverwrite, renov, demol,
-                prm, birth, birthday, death, marriage, divorce, lph, move, changeEmployment, changeSchoolUniv, driversLicense, accesibility,
+                prm, birth, birthday, death, marriage, divorce, lph, move, changeEmployment, changeSchoolUniv, driversLicense, accessibility,
                 commutingTimeModel, updateCarOwnershipModel, updateJobs, createCarOwnershipModel, switchToAutonomousVehicleModel, transportModel);
     }
 

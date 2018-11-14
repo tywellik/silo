@@ -150,6 +150,7 @@ public final class SiloModel {
 
     private void setupAccessibility() {
 		if (properties.transportModel.transportModelIdentifier != TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
+			System.out.println(modelContainer.getAcc());
     		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
     		accessibility.updateHansenAccessibilities(properties.main.startYear);
     	}
