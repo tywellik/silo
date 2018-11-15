@@ -150,9 +150,11 @@ public final class SiloModel {
 
     private void setupAccessibility() {
 		if (properties.transportModel.transportModelIdentifier != TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
-			System.out.println(modelContainer.getAcc());
     		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
     		accessibility.updateHansenAccessibilities(properties.main.startYear);
+    	} else {
+    		MatsimAccessibility accessibility = (MatsimAccessibility) modelContainer.getAcc();
+			accessibility.updateHansenAccessibilities(properties.main.startYear);
     	}
     	// In MATSim case, this is done by running the MATSim model
     }
@@ -270,43 +272,34 @@ public final class SiloModel {
 				householdData.clearConventionalCarsHouseholds();
 				timeTracker.recordAndReset("switchToAV");
 			}
-
-//			TODO: Following lines gone in master branch. Check if correct
-//			if (skimYears.contains(year) &&
-//                    !tdmYears.contains(year) &&
-//					!properties.transportModel.runTravelDemandModel &&
-//					year != properties.main.startYear &&
-//                    !properties.transportModel.runMatsim) {
-//                    updateTravelTimes(year);
-//            }
-//			if (properties.transportModel.transportModelIdentifier == TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
-//	    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
-//	    		accessibility.updateHansenAccessibilities(year);
-//			} else {
-//				MatsimAccessibility accessibility = (MatsimAccessibility) modelContainer.getAcc();
-//				accessibility.updateHansenAccessibilities(year);
-//				// The accessibilities are computed whenever MATSim is run. To do scaling, however, this step is
-//				// necessary as all accessibility values ahve to be known to do this
-//				// TODO The population (i.e. the accessibility weight for SILO) would actually need to be updated
-//			} 
-//			timeTracker.recordAndReset("calcAccessibilities");
 			
-			// TODO check if this substitutes the part above
 			if (skimYears.contains(year) && year != properties.main.startYear) {
 				updateSkims(year);
 				timeTracker.recordAndReset("Skim update");
 			}
-			//
 
 			if (properties.transportModel.transportModelIdentifier != NONE && tdmYears.contains(year + 1)) {
 				modelContainer.getTransportModel().runTransportModel(year + 1);
 				timeTracker.recordAndReset("transportModel");
-				if (properties.transportModel.transportModelIdentifier == TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
-					SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
-					accessibility.updateHansenAccessibilities(year + 1);
-					timeTracker.recordAndReset("calcAccessibilities");
-				} // TODO Consider MATSim case?
-            }
+			}
+			
+			if (properties.transportModel.transportModelIdentifier != TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
+	    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
+	    		accessibility.updateHansenAccessibilities(year);
+			} else {
+				MatsimAccessibility accessibility = (MatsimAccessibility) modelContainer.getAcc();
+				accessibility.updateHansenAccessibilities(year);
+				// The accessibilities are computed whenever MATSim is run. To do scaling, however, this step is
+				// necessary as all accessibility values ahve to be known to do this
+				// TODO The population (i.e. the accessibility weight for SILO) would actually need to be updated
+			} 
+			timeTracker.recordAndReset("calcAccessibilities");
+			
+//			if (properties.transportModel.transportModelIdentifier == TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
+//				SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
+//				accessibility.updateHansenAccessibilities(year + 1);
+//				timeTracker.recordAndReset("calcAccessibilities");
+//			} // TODO Consider MATSim case?
 
 
 			modelContainer.getPrm().updatedRealEstatePrices();

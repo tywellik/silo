@@ -246,7 +246,6 @@ public class SiloMatsimUtils {
 		double ymax = Double.MIN_VALUE;
 		
 		for (ActivityFacility activityFacility : activityFacilities.getFacilities().values()) {	
-			LOG.warn("Opportinity coord = " + activityFacility.getCoord());
 			double x = activityFacility.getCoord().getX();
 			double y = activityFacility.getCoord().getY();
 			if (x < xmin) {
