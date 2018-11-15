@@ -84,7 +84,7 @@ public class MatsimAccessibility implements Accessibility, FacilityDataExchangeI
     
     // Other methods
     private static void scaleAccessibility(Map<Id<ActivityFacility>, Double> accessibility) {
-		double highestAccessibility = Double.MIN_VALUE;
+		double highestAccessibility = Double.MIN_VALUE; // TODO Rather use minus infinity
 		for (double value : accessibility.values()) {
 			if (value > highestAccessibility) {
 				highestAccessibility = value;

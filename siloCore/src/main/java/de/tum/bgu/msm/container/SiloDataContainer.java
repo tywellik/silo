@@ -37,7 +37,7 @@ public class SiloDataContainer {
     private final RealEstateDataManager realEstateData;
     private final JobDataManager jobData;
     private final GeoData geoData;
-    private final TravelTimes travelTimes;
+    private final TravelTimes travelTimes; // Should always remain final since MATSim pulls the reference only once
 
     /**
      * The contructor is private, with a factory method {link {@link SiloDataContainer#createSiloDataContainer(Implementation)}}
