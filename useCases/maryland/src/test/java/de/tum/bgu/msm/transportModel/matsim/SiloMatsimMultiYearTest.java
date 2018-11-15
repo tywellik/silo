@@ -6,6 +6,7 @@ import de.tum.bgu.msm.transportModel.SiloTestUtils;
 import junitx.framework.FileAssert;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.api.core.v01.Scenario;
@@ -32,6 +33,7 @@ public class SiloMatsimMultiYearTest {
 
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils();
 
+	@Ignore
 	@Test
 	public final void testMainMultiYear() {
 		SiloTestUtils.cleanUpMicrodataFiles();
