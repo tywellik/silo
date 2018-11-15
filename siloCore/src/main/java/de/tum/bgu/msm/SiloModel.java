@@ -283,13 +283,7 @@ public final class SiloModel {
 				timeTracker.recordAndReset("transportModel");
 			}
 			
-//			if (properties.transportModel.transportModelIdentifier != TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
-//	    		Accessibility accessibility = modelContainer.getAcc();
-	    		modelContainer.getAcc().updateHansenAccessibilities(year);
-//			} else {
-//				MatsimAccessibility accessibility = (MatsimAccessibility) modelContainer.getAcc();
-//				accessibility.updateHansenAccessibilities(year);
-//			} 
+	    	modelContainer.getAcc().updateHansenAccessibilities(year);
 			timeTracker.recordAndReset("calcAccessibilities");
 
 
