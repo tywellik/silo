@@ -47,8 +47,7 @@ public class SiloMatsimUtils {
 	
 	private final static GeometryFactory geometryFactory = new GeometryFactory();
 	
-	public static Config createMatsimConfig(Config initialConfig, String runId, double populationScalingFactor, 
-			double workerScalingFactor, ActivityFacilities zoneCentroids) {
+	public static Config createMatsimConfig(Config initialConfig, String runId, double populationScalingFactor, ActivityFacilities zoneCentroids) {
 		LOG.info("Stating creating a MATSim config.");
 		Config config = ConfigUtils.loadConfig(initialConfig.getContext());
 		config.qsim().setFlowCapFactor(populationScalingFactor);

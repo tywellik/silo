@@ -108,16 +108,12 @@ public final class MatsimTransportModel implements TransportModelI  {
 
 		double populationScalingFactor = properties.transportModel.matsimScaleFactor;
 		
-		// people working at non-peak times (only peak traffic is simulated), and people going by a mode other
-		// than car in case a car is still available to them
-		double workerScalingFactor = properties.transportModel.matsimWorkersShare;
-		
 		String matsimRunId = scenarioName + "_" + year;
 
-		Config config = SiloMatsimUtils.createMatsimConfig(initialMatsimConfig, matsimRunId, populationScalingFactor, workerScalingFactor, zoneCentroids);
+		Config config = SiloMatsimUtils.createMatsimConfig(initialMatsimConfig, matsimRunId, populationScalingFactor, zoneCentroids);
 		
 //		Population population = SiloMatsimUtils.createMatsimPopulation(config, dataContainer, zoneFeatureMap, populationScalingFactor * workerScalingFactor);
-		Population population = SiloMatsimUtils.createMatsimPopulation(config, dataContainer, populationScalingFactor * workerScalingFactor);
+		Population population = SiloMatsimUtils.createMatsimPopulation(config, dataContainer, populationScalingFactor);
 		
 		if (writePopulation) {
     		new File("./test/scenarios/annapolis_reduced/matsim_output/").mkdirs();
