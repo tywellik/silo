@@ -12,14 +12,14 @@ public interface Accessibility {
 	// TODO need specification for undefined time, e.g. null
 	// undefined = some averaging?
 	// SILO needs peak-hour accessibilities
-	// need to be scaled
+	// need to be scaled ... DONE
 	
 	// TODO use Location instead of zone as argument
 	
-	// TODO Maybe rename this method?
 	public void updateHansenAccessibilities(int year);
 	
 	public double getAutoAccessibilityForZone(Zone zone);
+//	public double getAutoAccessibility(Zone zone, String mode, double time);
 	
 	public double getTransitAccessibilityForZone(Zone zone);
 	
