@@ -283,23 +283,14 @@ public final class SiloModel {
 				timeTracker.recordAndReset("transportModel");
 			}
 			
-			if (properties.transportModel.transportModelIdentifier != TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
-	    		SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
-	    		accessibility.updateHansenAccessibilities(year);
-			} else {
-				MatsimAccessibility accessibility = (MatsimAccessibility) modelContainer.getAcc();
-				accessibility.updateHansenAccessibilities(year);
-				// The accessibilities are computed whenever MATSim is run. To do scaling, however, this step is
-				// necessary as all accessibility values ahve to be known to do this
-				// TODO The population (i.e. the accessibility weight for SILO) would actually need to be updated
-			} 
+//			if (properties.transportModel.transportModelIdentifier != TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
+//	    		Accessibility accessibility = modelContainer.getAcc();
+	    		modelContainer.getAcc().updateHansenAccessibilities(year);
+//			} else {
+//				MatsimAccessibility accessibility = (MatsimAccessibility) modelContainer.getAcc();
+//				accessibility.updateHansenAccessibilities(year);
+//			} 
 			timeTracker.recordAndReset("calcAccessibilities");
-			
-//			if (properties.transportModel.transportModelIdentifier == TransportModelPropertiesModule.TransportModelIdentifier.MATSIM) {
-//				SkimBasedAccessibility accessibility = (SkimBasedAccessibility) modelContainer.getAcc();
-//				accessibility.updateHansenAccessibilities(year + 1);
-//				timeTracker.recordAndReset("calcAccessibilities");
-//			} // TODO Consider MATSim case?
 
 
 			modelContainer.getPrm().updatedRealEstatePrices();
