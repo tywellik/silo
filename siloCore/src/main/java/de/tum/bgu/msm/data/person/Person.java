@@ -57,7 +57,7 @@ public interface Person extends Id {
 
     PersonRole getRole();
 
-    int getWorkplace();
+    int getJobId();
 
     void setEducationLevel(int educationLevel);
 
@@ -93,7 +93,9 @@ public interface Person extends Id {
 
     Coordinate getSchoolLocation();
 
-    int getSchoolZoneId();
+    int getSchoolId();
+
+    void setSchoolId(int schoolId);
 
     void setSchoolCoordinate(Coordinate schoolLocation, int schoolZoneId);
 }

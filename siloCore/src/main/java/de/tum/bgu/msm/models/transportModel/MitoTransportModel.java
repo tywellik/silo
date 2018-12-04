@@ -39,7 +39,7 @@ public final class MitoTransportModel extends AbstractModel implements Transport
     public MitoTransportModel(String baseDirectory, SiloDataContainer dataContainer) {
     	super(dataContainer);
     	this.travelTimes = Objects.requireNonNull(dataContainer.getTravelTimes());
-		this.propertiesPath = Objects.requireNonNull(Properties.get().transportModel.mitoPropertiesPath);
+		this.propertiesPath = Objects.requireNonNull(Properties.get().main.baseDirectory + Properties.get().transportModel.mitoPropertiesPath);
 		this.baseDirectory = Objects.requireNonNull(baseDirectory);
 	}
 
@@ -59,7 +59,7 @@ public final class MitoTransportModel extends AbstractModel implements Transport
 	private void updateData(int year) {
     	Map<Integer, MitoZone> zones = new HashMap<>();
 		for (Zone siloZone: dataContainer.getGeoData().getZones().values()) {
-			MitoZone zone = new MitoZone(siloZone.getZoneId(), siloZone.getArea(), ((MunichZone)siloZone).getAreaType());
+			MitoZone zone = new MitoZone(siloZone.getZoneId(), siloZone.getArea_sqmi(), ((MunichZone)siloZone).getAreaType());
 			zones.put(zone.getId(), zone);
 		}
 		dataContainer.getJobData().fillMitoZoneEmployees(zones);
@@ -70,9 +70,9 @@ public final class MitoTransportModel extends AbstractModel implements Transport
 				MitoPerson mitoPerson = convertToMitoPp(person);
 				Coordinate workplaceCoordinate = null;
 				//todo need to mode the transitions between new born, student, unemployed and worker in a better way
-				if (person.getWorkplace()>0) {
+				if (person.getJobId()>0) {
 					//is a worker
-					Job job = dataContainer.getJobData().getJobFromId(person.getWorkplace());
+					Job job = dataContainer.getJobData().getJobFromId(person.getJobId());
 					if (job instanceof MicroLocation) {
 						//is a worker with a microlocated job
 						mitoPerson.setOccupationLocation(((MicroLocation) job).getCoordinate());
@@ -108,16 +108,23 @@ public final class MitoTransportModel extends AbstractModel implements Transport
 			MitoHousehold household = convertToMitoHh(siloHousehold, zone);
 			//set mitoHousehold's microlocation
 			if (dwelling instanceof MicroLocation) {
-				household.setHomeLocation(((MicroLocation) dwelling).getCoordinate());
+
 			}
             //todo if there are housholds without adults they cannot be processed
 			if (siloHousehold.getPersons().values().stream().filter(p -> p.getAge() >= 18).count() != 0){
-                thhs.put(household.getId(), household);
+				if((((MicroLocation) dwelling).getCoordinate() != null)){
+					//todo if there are households without microlocation mito does not work
+					household.setHomeLocation(((MicroLocation) dwelling).getCoordinate());
+					thhs.put(household.getId(), household);
+				} else {
+					logger.info("no microlocation valid for mito - skip household");
+					householdsSkipped++;
+				}
             } else {
                 householdsSkipped++;
             }
 		}
-        logger.warn("There are " + householdsSkipped + " households without adults that CANNOT be processed in MITO (" +
+        logger.warn("There are " + householdsSkipped + " households without adults or with unvalid microlocations that CANNOT be processed in MITO (" +
                 householdsSkipped/dataContainer.getHouseholdData().getHouseholds().size()*100 + "%)");
 		return thhs;
 	}
@@ -129,7 +136,7 @@ public final class MitoTransportModel extends AbstractModel implements Transport
 	private MitoPerson convertToMitoPp(Person person) {
 		final MitoGender mitoGender = MitoGender.valueOf(person.getGender().name());
 		final MitoOccupation mitoOccupation = MitoOccupation.valueOf(person.getOccupation().getCode());
-		final int workPlace = person.getWorkplace();
+		final int workPlace = person.getJobId();
 		int workzone = -1;
 		if(workPlace > 0) {
 			workzone = dataContainer.getJobData().getJobFromId(workPlace).getZoneId();

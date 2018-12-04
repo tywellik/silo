@@ -115,9 +115,8 @@ public class BirthModel extends AbstractModel implements MicroEventModel<BirthEv
             gender = FEMALE;
         }
         final Person child = factory.createPerson(id, 0, gender, household.getRace(),
-                Occupation.TODDLER, 0, 0);
+                Occupation.TODDLER,PersonRole.CHILD, 0, 0);
         householdData.addPerson(child);
-        child.setRole(PersonRole.CHILD);
         householdData.addPersonToHousehold(child, household);
         householdData.addHouseholdThatChanged(household);
         if (id == SiloUtil.trackPp
@@ -134,6 +133,6 @@ public class BirthModel extends AbstractModel implements MicroEventModel<BirthEv
     }
 
     private boolean personCanGiveBirth(Person person) {
-        return person.getGender() == FEMALE && calculator.calculateBirthProbability(person.getAge(), HouseholdUtil.getNumberOfChildren(person.getHousehold())) > 0;
+        return person.getGender() == FEMALE && calculator.calculateBirthProbability(person.getAge(), 0) > 0; //no need to calculate here the exact birth probability, just the possibility of give birth
     }
 }

@@ -19,7 +19,6 @@ package de.tum.bgu.msm.data;
 import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.Multiset;
 import com.pb.common.datafile.TableDataSet;
-import de.tum.bgu.msm.properties.modules.TransportModelPropertiesModule;
 import de.tum.bgu.msm.utils.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.job.Job;
@@ -320,7 +319,7 @@ public class JobDataManager {
         if (person == null) {
             return;
         }
-        final int workplace = person.getWorkplace();
+        final int workplace = person.getJobId();
         Job jb = jobs.get(workplace);
         if (makeJobAvailableToOthers) {
             addJobToVacancyList(jb.getZoneId(), workplace);
@@ -465,7 +464,7 @@ public class JobDataManager {
     public void calculateJobDensityByZone() {
         Multiset<Integer> counter = ConcurrentHashMultiset.create();
         jobs.values().parallelStream().forEach(j -> counter.add(j.getZoneId()));
-        geoData.getZones().forEach((id, zone) -> zonalJobDensity.put(id, (double) (counter.count(id) / zone.getArea())));
+        geoData.getZones().forEach((id, zone) -> zonalJobDensity.put(id, (double) (counter.count(id) / zone.getArea_sqmi())));
     }
 
 
