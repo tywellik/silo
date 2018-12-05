@@ -9,7 +9,7 @@
 	</module>
 
 	<module name="network" >
-		<param name="inputNetworkFile" value="network/05/network.xml.gz" />
+		<param name="inputNetworkFile" value="network/network_coarse.xml.gz" />
 	</module>
 
 	<module name="qsim" >
