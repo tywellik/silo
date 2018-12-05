@@ -22,5 +22,9 @@
 	
 	<module name="accessibility" >
 		<param name="timeOfDay" value="28800.0" />
+		<param name="boundingBoxLeft" value="83076.02724856154" />
+		<param name="boundingBoxRight" value="496114.4521283055" />
+		<param name="boundingBoxBottom" value="4119673.602727123" />
+		<param name="boundingBoxTop" value="4459298.050819439" />
 	</module>
 </config>
