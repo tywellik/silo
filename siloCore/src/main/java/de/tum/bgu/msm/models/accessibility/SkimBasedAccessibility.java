@@ -167,7 +167,9 @@ public class SkimBasedAccessibility implements Accessibility {
     public double getAutoAccessibilityForZone(Zone zone) {
     	// TODO Can be combined with getTransitAccessibilityForZone into one method which get the mode
     	// as an argument, nk/dz, july'18
-        return this.autoAccessibilities.getQuick(zone.getId());
+    	double autoAccessibility = this.autoAccessibilities.getQuick(zone.getId());
+//    	LOGGER.info("Auto accessibility of zone " + zone.getId() + " is " + autoAccessibility);
+		return autoAccessibility;
     }
     
     @Override

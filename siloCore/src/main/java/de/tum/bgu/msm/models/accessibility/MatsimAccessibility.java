@@ -68,12 +68,14 @@ public class MatsimAccessibility implements Accessibility, FacilityDataExchangeI
 	
     @Override
     public double getAutoAccessibilityForZone(Zone zone) {
-    	return autoAccessibilities.get(Id.create(zone.getId(), ActivityFacility.class));
+    	double autoAccessibility = autoAccessibilities.get(Id.create(zone.getId(), ActivityFacility.class));
+//    	LOG.info("Auto accessibility of zone " + zone.getId() + " is " + autoAccessibility);
+		return autoAccessibility;
     }
     
     @Override
     public double getTransitAccessibilityForZone(Zone zone) {
-    	LOG.warn("Transit accessibilities not yet properly implemented.");
+//    	LOG.warn("Transit accessibilities not yet properly implemented.");
     	return autoAccessibilities.get(Id.create(zone.getId(), ActivityFacility.class)); // TODO Put transit accessibilities here!
     }
 
