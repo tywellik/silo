@@ -29,6 +29,8 @@ import static org.matsim.utils.eventsfilecomparison.EventsFileComparator.Result.
  * @author dziemke, nagel
  */
 public class SiloMatsimTest {
+	// Note: The network used in this test is much too coarse for accessibility computations to make sense.
+	
 	private static final Logger log = Logger.getLogger(SiloMatsimTest.class);
 
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils();
@@ -40,8 +42,8 @@ public class SiloMatsimTest {
 	 */
 	@Test
 	public final void testMain() {
-		SiloTestUtils.cleanUpMicrodataFiles();
-		SiloTestUtils.cleanUpOtherFiles();
+//		SiloTestUtils.cleanUpMicrodataFiles();
+//		SiloTestUtils.cleanUpOtherFiles();
 
 		boolean cleanupAfterTest = true; // Set to true normally; set to false to be able to inspect files
 		String arg = "test/scenarios/annapolis/javaFiles/siloMatsim.properties";
