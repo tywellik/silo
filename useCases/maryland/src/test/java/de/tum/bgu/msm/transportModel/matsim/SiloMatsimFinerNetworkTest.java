@@ -40,8 +40,8 @@ public class SiloMatsimFinerNetworkTest {
 	 */
 	@Test
 	public final void testMain() {
-//		SiloTestUtils.cleanUpMicrodataFiles();
-//		SiloTestUtils.cleanUpOtherFiles();
+		SiloTestUtils.cleanUpMicrodataFiles();
+		SiloTestUtils.cleanUpOtherFiles();
 
 		boolean cleanupAfterTest = true; // Set to true normally; set to false to be able to inspect files
 		String arg = "test/scenarios/annapolis/javaFiles/siloMatsim.properties";
