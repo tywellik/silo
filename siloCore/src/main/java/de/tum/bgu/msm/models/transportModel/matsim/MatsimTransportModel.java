@@ -55,8 +55,6 @@ import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
 
-import com.vividsolutions.jts.geom.Envelope;
-
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.SummarizeData;
 import de.tum.bgu.msm.models.accessibility.MatsimAccessibility;
@@ -97,22 +95,13 @@ public final class MatsimTransportModel implements TransportModelI  {
 		LOG.warn("Running MATSim transport model for year " + year + ".");
 
 		String scenarioName = properties.main.scenarioName;
-		
-		// In the current implementation, MATSim is used to reflect the functionality that was previously
-		// covered by MSTM. As such, based on the MATSim transport simulation, a travel time matrix (skim)
-		// is computed. To do so, random coordinates in each zone are taken to measure the zone-to-zone
-		// travel times. <code>numberOfCalcPoints</code> states how many such points in each zone are used;
-		// in case multiple points are used; the average of all travel times of a given relation is used.
-//		int numberOfCalcPoints = 1;
-		boolean writePopulation = false;
 
+		boolean writePopulation = true;
 		double populationScalingFactor = properties.transportModel.matsimScaleFactor;
-		
 		String matsimRunId = scenarioName + "_" + year;
 
 		Config config = SiloMatsimUtils.createMatsimConfig(initialMatsimConfig, matsimRunId, populationScalingFactor, zoneCentroids);
 		
-//		Population population = SiloMatsimUtils.createMatsimPopulation(config, dataContainer, zoneFeatureMap, populationScalingFactor * workerScalingFactor);
 		Population population = SiloMatsimUtils.createMatsimPopulation(config, dataContainer, populationScalingFactor);
 		
 		if (writePopulation) {
@@ -147,7 +136,6 @@ public final class MatsimTransportModel implements TransportModelI  {
 		scenario.getConfig().facilities().setFacilitiesSource(FacilitiesConfigGroup.FacilitiesSource.setInScenario);
 		// End opportunities
 		
-		
 		// Accessibility settings
 		AccessibilityConfigGroup acg = ConfigUtils.addOrGetModule(config, AccessibilityConfigGroup.class);
 		acg.setMeasuringPointsFacilities(zoneCentroids);
@@ -156,13 +144,9 @@ public final class MatsimTransportModel implements TransportModelI  {
 		acg.setWeightExponent(Properties.get().accessibility.alphaAuto); // TODO Need differentiation for different modes
 		LOG.warn("Properties.get().accessibility.alphaAuto = " + Properties.get().accessibility.alphaAuto);
 		acg.setAccessibilityMeasureType(AccessibilityMeasureType.rawSum);
-		
-		acg.setEnvelope(new Envelope(84076.02724856154 - 1000, 495114.4521283055 + 1000, 4120673.602727123 - 1000, 4458298.050819439 + 1000));
-		//
-		
+		// End accessibility settings
 		
 		ConfigUtils.setVspDefaults(config);
-		// End accessibility settings
 		
 		Controler controler = new Controler(scenario);
 		
