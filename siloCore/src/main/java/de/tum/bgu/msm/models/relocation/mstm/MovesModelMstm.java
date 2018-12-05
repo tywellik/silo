@@ -20,7 +20,7 @@ import de.tum.bgu.msm.data.maryland.MstmRegion;
 import de.tum.bgu.msm.data.person.Occupation;
 import de.tum.bgu.msm.data.person.Person;
 import de.tum.bgu.msm.data.person.Race;
-import de.tum.bgu.msm.models.CommutingTimeModel;
+import de.tum.bgu.msm.models.CommutingTimeProbabilityModel;
 import de.tum.bgu.msm.models.accessibility.Accessibility;
 import de.tum.bgu.msm.models.relocation.AbstractDefaultMovesModel;
 import de.tum.bgu.msm.models.relocation.SelectDwellingJSCalculator;
@@ -49,8 +49,8 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
 
     private SelectDwellingJSCalculator dwellingCalculator;
 
-    public MovesModelMstm(SiloDataContainer dataContainer, Accessibility accessibility, CommutingTimeModel commutingTimeModel) {
-        super(dataContainer, accessibility, commutingTimeModel);
+    public MovesModelMstm(SiloDataContainer dataContainer, Accessibility accessibility, CommutingTimeProbabilityModel commutingTimeProbabilityModel) {
+        super(dataContainer, accessibility, commutingTimeProbabilityModel);
         selectDwellingRaceRelevance = Properties.get().moves.racialRelevanceInZone;
         provideRentSubsidyToLowIncomeHh = Properties.get().moves.provideLowIncomeSubsidy;
         if (provideRentSubsidyToLowIncomeHh) {
@@ -211,7 +211,7 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
                 for (Zone workZone : workZones) {
                     int timeFromZoneToRegion = (int) dataContainer.getTravelTimes().getTravelTimeToRegion(
                     		workZone, region, Properties.get().transportModel.peakHour_s, TransportMode.car);
-                    thisRegionFactor = thisRegionFactor * commutingTimeModel.getCommutingTimeProbability(timeFromZoneToRegion);
+                    thisRegionFactor = thisRegionFactor * commutingTimeProbabilityModel.getCommutingTimeProbability(timeFromZoneToRegion);
                 }
             }
             utilitiesForThisHousheold.put(region.getId(),utilitiesForThisHousheold.get(region.getId())*thisRegionFactor);

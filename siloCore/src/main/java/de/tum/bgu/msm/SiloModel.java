@@ -31,7 +31,7 @@ import de.tum.bgu.msm.events.impls.realEstate.ConstructionEvent;
 import de.tum.bgu.msm.events.impls.realEstate.DemolitionEvent;
 import de.tum.bgu.msm.events.impls.realEstate.RenovationEvent;
 import de.tum.bgu.msm.models.transportModel.matsim.MatsimTransportModel;
-import de.tum.bgu.msm.models.CommutingTimeModel;
+import de.tum.bgu.msm.models.CommutingTimeProbabilityModel;
 import de.tum.bgu.msm.models.accessibility.MatsimAccessibility;
 import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.properties.Properties;
@@ -144,7 +144,7 @@ public final class SiloModel {
 	}
 	
 	private void setupCommutingTime() {
-    	CommutingTimeModel commutingTimeModel = modelContainer.getCommutingTimeModel();
+    	CommutingTimeProbabilityModel commutingTimeModel = modelContainer.getCommutingTimeProbabilityModel();
     	commutingTimeModel.initialize();
     }
 

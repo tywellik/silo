@@ -28,7 +28,7 @@ import de.tum.bgu.msm.data.person.Occupation;
 import de.tum.bgu.msm.data.person.Person;
 import de.tum.bgu.msm.events.IssueCounter;
 import de.tum.bgu.msm.properties.Properties;
-import de.tum.bgu.msm.models.CommutingTimeModel;
+import de.tum.bgu.msm.models.CommutingTimeProbabilityModel;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.TransportMode;
@@ -363,7 +363,7 @@ public class JobDataManager {
 //    }
 
 
-    public int findVacantJob(Zone homeZone, Collection<Region> regions, CommutingTimeModel commutingTimeModel) {
+    public int findVacantJob(Zone homeZone, Collection<Region> regions, CommutingTimeProbabilityModel commutingTimeProbabilityModel) {
         // select vacant job for person living in homeZone
 
         Map<Region, Double> regionProb = new HashMap<>();
@@ -374,7 +374,7 @@ public class JobDataManager {
                 if (vacantJobsByRegionPos[reg.getId()] > 0) {
                     int distance = (int) (data.getTravelTimes().getTravelTimeToRegion(homeZone, reg,
                     		Properties.get().transportModel.peakHour_s, TransportMode.car) + 0.5);
-                    regionProb.put(reg, commutingTimeModel.getCommutingTimeProbability(distance) * (double) getNumberOfVacantJobsByRegion(reg.getId()));
+                    regionProb.put(reg, commutingTimeProbabilityModel.getCommutingTimeProbability(distance) * (double) getNumberOfVacantJobsByRegion(reg.getId()));
                 }
             }
             if (SiloUtil.getSum(regionProb.values()) == 0) {

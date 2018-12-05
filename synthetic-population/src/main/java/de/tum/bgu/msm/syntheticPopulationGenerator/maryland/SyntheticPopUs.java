@@ -22,7 +22,7 @@ import de.tum.bgu.msm.data.person.Gender;
 import de.tum.bgu.msm.data.person.Occupation;
 import de.tum.bgu.msm.data.person.*;
 import de.tum.bgu.msm.data.travelTimes.SkimTravelTimes;
-import de.tum.bgu.msm.models.CommutingTimeModel;
+import de.tum.bgu.msm.models.CommutingTimeProbabilityModel;
 import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
 import de.tum.bgu.msm.models.autoOwnership.maryland.MaryLandUpdateCarOwnershipModel;
 import de.tum.bgu.msm.properties.Properties;
@@ -71,7 +71,7 @@ public class SyntheticPopUs implements SyntheticPopI {
     private ResourceBundle rb;
     private GeoDataMstm geoData;
     private SkimBasedAccessibility accessibility;
-    private CommutingTimeModel commutingTimeModel;
+    private CommutingTimeProbabilityModel commutingTimeProbabilityModel;
     private RealEstateDataManager realEstateDataManager;
     private HouseholdDataManager householdDataManager;
     private JobDataManager jobData;
@@ -99,7 +99,7 @@ public class SyntheticPopUs implements SyntheticPopI {
         geoData.readData();
         travelTimes = new SkimTravelTimes();
         accessibility = new SkimBasedAccessibility(dataContainer);                        // read in travel times and trip length frequency distribution
-        commutingTimeModel = new CommutingTimeModel();
+        commutingTimeProbabilityModel = new CommutingTimeProbabilityModel();
 
         final String transitSkimFile = Properties.get().accessibility.transitSkimFile(Properties.get().main.startYear);
         travelTimes.readSkim(TransportMode.pt, transitSkimFile,
@@ -109,7 +109,7 @@ public class SyntheticPopUs implements SyntheticPopI {
         travelTimes.readSkim(TransportMode.car, carSkimFile,
                     Properties.get().accessibility.autoPeakSkim, Properties.get().accessibility.skimFileFactorCar);
 
-        commutingTimeModel.initialize();
+        commutingTimeProbabilityModel.initialize();
         processPums();
 
         realEstateDataManager = dataContainer.getRealEstateData();
@@ -605,7 +605,7 @@ public class SyntheticPopUs implements SyntheticPopI {
                 	Zone homeZone = geoData.getZones().get(homeTaz);
                 	Zone destinationZone = zone;
                     int distance = (int) (travelTimes.getTravelTime(homeZone, destinationZone, Properties.get().transportModel.peakHour_s, "car") + 0.5);
-                    zoneProbabilities.put(zone, commutingTimeModel.getCommutingTimeProbability(distance) * (double) numberOfJobsInThisZone);
+                    zoneProbabilities.put(zone, commutingTimeProbabilityModel.getCommutingTimeProbability(distance) * (double) numberOfJobsInThisZone);
                 } else {
                     zoneProbabilities.put(zone, 0.);
                 }

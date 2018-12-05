@@ -5,7 +5,7 @@ import de.tum.bgu.msm.data.Zone;
 import de.tum.bgu.msm.data.dwelling.DwellingUtils;
 import de.tum.bgu.msm.data.household.HouseholdUtil;
 import de.tum.bgu.msm.data.munich.GeoDataMuc;
-import de.tum.bgu.msm.models.CommutingTimeModel;
+import de.tum.bgu.msm.models.CommutingTimeProbabilityModel;
 import de.tum.bgu.msm.models.accessibility.Accessibility;
 import de.tum.bgu.msm.models.accessibility.MatsimAccessibility;
 import de.tum.bgu.msm.models.accessibility.SkimBasedAccessibility;
@@ -74,7 +74,7 @@ public class SiloModelContainer {
     private final EducationModel educationUpdate;
     private final DriversLicense driversLicense;
     private final Accessibility acc;
-    private final CommutingTimeModel commutingTimeModel;
+    private final CommutingTimeProbabilityModel commutingTimeProbabilityModel;
     private final UpdateCarOwnershipModel updateCarOwnershipModel;
     private final UpdateJobs updateJobs;
     private final CreateCarOwnershipModel createCarOwnershipModel;
@@ -111,7 +111,7 @@ public class SiloModelContainer {
                                PricingModel prm, BirthModel birth, BirthdayModel birthday, DeathModel death, MarriageModel marriage,
                                DivorceModel divorce, LeaveParentHhModel lph, MovesModelI move, EmploymentModel changeEmployment,
                                EducationModel educationUpdate, DriversLicense driversLicense,
-                               Accessibility acc, CommutingTimeModel commutingTimeModel, UpdateCarOwnershipModel updateCarOwnershipModel, UpdateJobs updateJobs,
+                               Accessibility acc, CommutingTimeProbabilityModel commutingTimeProbabilityModel, UpdateCarOwnershipModel updateCarOwnershipModel, UpdateJobs updateJobs,
                                CreateCarOwnershipModel createCarOwnershipModel, SwitchToAutonomousVehicleModel switchToAutonomousVehicleModel,
                                TransportModelI transportModel) {
         this.iomig = iomig;
@@ -131,7 +131,7 @@ public class SiloModelContainer {
         this.educationUpdate = educationUpdate;
         this.driversLicense = driversLicense;
         this.acc = acc;
-        this.commutingTimeModel = commutingTimeModel;
+        this.commutingTimeProbabilityModel = commutingTimeProbabilityModel;
         this.updateCarOwnershipModel = updateCarOwnershipModel;
         this.updateJobs = updateJobs;
         this.createCarOwnershipModel = createCarOwnershipModel;
@@ -150,7 +150,7 @@ public class SiloModelContainer {
 
         TransportModelI transportModel = null;
         Accessibility accessibility = null;
-        CommutingTimeModel commutingTimeModel = new CommutingTimeModel();
+        CommutingTimeProbabilityModel commutingTimeModel = new CommutingTimeProbabilityModel();
         
         switch (properties.transportModel.transportModelIdentifier) {
             case MITO:
@@ -300,8 +300,8 @@ public class SiloModelContainer {
         return acc;
     }
     
-    public CommutingTimeModel getCommutingTimeModel() {
-        return commutingTimeModel;
+    public CommutingTimeProbabilityModel getCommutingTimeProbabilityModel() {
+        return commutingTimeProbabilityModel;
     }
 
     public UpdateCarOwnershipModel getUpdateCarOwnershipModel() {

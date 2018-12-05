@@ -7,8 +7,8 @@ import com.pb.common.datafile.TableDataSet;
 import de.tum.bgu.msm.utils.SiloUtil;
 import de.tum.bgu.msm.properties.Properties;
 
-public class CommutingTimeModel {
-    private static final Logger LOGGER = Logger.getLogger(CommutingTimeModel.class);
+public class CommutingTimeProbabilityModel {
+    private static final Logger LOGGER = Logger.getLogger(CommutingTimeProbabilityModel.class);
 
     private float[] workTLFD;
     

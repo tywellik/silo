@@ -20,7 +20,7 @@ import de.tum.bgu.msm.data.household.IncomeCategory;
 import de.tum.bgu.msm.data.person.Nationality;
 import de.tum.bgu.msm.data.person.Occupation;
 import de.tum.bgu.msm.data.person.Person;
-import de.tum.bgu.msm.models.CommutingTimeModel;
+import de.tum.bgu.msm.models.CommutingTimeProbabilityModel;
 import de.tum.bgu.msm.models.accessibility.Accessibility;
 import de.tum.bgu.msm.models.relocation.AbstractDefaultMovesModel;
 import de.tum.bgu.msm.models.relocation.SelectDwellingJSCalculator;
@@ -41,8 +41,8 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
     private final DoubleMatrix1D regionalShareForeigners;
     private final DoubleMatrix1D hhByRegion;
 
-    public MovesModelMuc(SiloDataContainer dataContainer, Accessibility accessibility, CommutingTimeModel commutingTimeModel) {
-        super(dataContainer, accessibility, commutingTimeModel);
+    public MovesModelMuc(SiloDataContainer dataContainer, Accessibility accessibility, CommutingTimeProbabilityModel commutingTimeProbabilityModel) {
+        super(dataContainer, accessibility, commutingTimeProbabilityModel);
         regionalShareForeigners = Matrices.doubleMatrix1D(geoData.getRegions().values());
         hhByRegion = Matrices.doubleMatrix1D(geoData.getRegions().values());
     }
@@ -154,7 +154,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
                 for (Zone workZone : workZones) {
                     int timeFromZoneToRegion = (int) dataContainer.getTravelTimes().getTravelTimeToRegion(
                     		workZone, region, Properties.get().transportModel.peakHour_s, TransportMode.car);
-                    thisRegionFactor = thisRegionFactor * commutingTimeModel.getCommutingTimeProbability(timeFromZoneToRegion);
+                    thisRegionFactor = thisRegionFactor * commutingTimeProbabilityModel.getCommutingTimeProbability(timeFromZoneToRegion);
                 }
             }
             utilitiesForThisHousheold.put(region.getId(),utilitiesForThisHousheold.get(region.getId())*thisRegionFactor);
@@ -302,7 +302,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         }
         double workDistanceUtility = 1;
         for (Job workLocation : jobsForThisHousehold.values()){
-        	double factorForThisZone = commutingTimeModel.getCommutingTimeProbability(Math.max(1,(int) dataContainer.getTravelTimes().getTravelTime(
+        	double factorForThisZone = commutingTimeProbabilityModel.getCommutingTimeProbability(Math.max(1,(int) dataContainer.getTravelTimes().getTravelTime(
                     dd, workLocation, workLocation.getStartTimeInSeconds(), TransportMode.car)));
             workDistanceUtility *= factorForThisZone;
         }
