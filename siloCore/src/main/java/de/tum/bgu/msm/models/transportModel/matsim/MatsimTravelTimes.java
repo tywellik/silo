@@ -126,7 +126,7 @@ public final class MatsimTravelTimes implements TravelTimes {
 					Map<Id<Node>, LeastCostPathTree.NodeData> tree;
 					
 					if (treesForNodesByTimeSlices.containsKey(originNode.getId())) { // Node already checked
-						Map<TimeSlices, Map<Id<Node>, LeastCostPathTree.NodeData>> treesForCurrentNodeByTimeSlice = treesForNodesByTimeSlices.get(originNode);
+						Map<TimeSlices, Map<Id<Node>, LeastCostPathTree.NodeData>> treesForCurrentNodeByTimeSlice = treesForNodesByTimeSlices.get(originNode.getId());
 						if (treesForCurrentNodeByTimeSlice.containsKey(timeSlice)) { // Time slice already checked
 							tree = treesForCurrentNodeByTimeSlice.get(timeSlice);
 						} else {
