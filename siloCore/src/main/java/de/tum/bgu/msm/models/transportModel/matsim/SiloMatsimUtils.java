@@ -2,7 +2,6 @@ package de.tum.bgu.msm.models.transportModel.matsim;
 
 import com.pb.common.matrix.Matrix;
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
 import de.tum.bgu.msm.utils.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.HouseholdDataManager;
@@ -37,15 +36,11 @@ import org.matsim.facilities.ActivityFacility;
 import java.util.Collection;
 import java.util.Map;
 
-//import com.vividsolutions.jts.geom.*;
-
 /**
  * @author dziemke
  */
 public class SiloMatsimUtils {
 	private final static Logger LOG = Logger.getLogger(SiloMatsimUtils.class);
-	
-	private final static GeometryFactory geometryFactory = new GeometryFactory();
 	
 	public static Config createMatsimConfig(Config initialConfig, String runId, double populationScalingFactor, ActivityFacilities zoneCentroids) {
 		LOG.info("Stating creating a MATSim config.");
@@ -106,8 +101,6 @@ public class SiloMatsimUtils {
 		return config;
 	}
 
-//	public static Population createMatsimPopulation(Config config, SiloDataContainer dataContainer,
-//			Map<Integer,SimpleFeature> zoneFeatureMap, double scalingFactor) {
 	public static Population createMatsimPopulation(Config config, SiloDataContainer dataContainer, double scalingFactor) {
 		LOG.info("Starting creating a MATSim population.");
 		HouseholdDataManager householdData = dataContainer.getHouseholdData();
@@ -123,12 +116,11 @@ public class SiloMatsimUtils {
     			// continued in the next step, i.e. that the person is added to the population
     			continue;
     		}
-
     		if (siloPerson.getOccupation() != Occupation.EMPLOYED) { // i.e. person does not work
     			continue;
     		}
-
     		int siloWorkplaceId = siloPerson.getJobId();
+    		// TODO Check if this is still the correct identifier for "job outside region"
     		if (siloWorkplaceId == -2) { // i.e. person has workplace outside study area
     			continue;
     		}
@@ -174,49 +166,22 @@ public class SiloMatsimUtils {
     		Plan matsimPlan = matsimPopulationFactory.createPlan();
     		matsimPerson.addPlan(matsimPlan);
 
-//    		SimpleFeature homeFeature = zoneFeatureMap.get(siloHomeTazId);
-//    		//TODO remove getRandomCoordinate when implementing microlocation
-//    		Coord homeCoordinates = SiloMatsimUtils.getRandomCoordinateInGeometry(homeFeature);
-//    		Activity activity1 = matsimPopulationFactory.createActivityFromCoord("home", homeCoordinates);
     		Activity activity1 = matsimPopulationFactory.createActivityFromCoord("home", dwellingCoord);
     		activity1.setEndTime(6 * 3600 + 3 * SiloUtil.getRandomNumberAsDouble() * 3600); // TODO Potentially change later
     		matsimPlan.addActivity(activity1);
     		matsimPlan.addLeg(matsimPopulationFactory.createLeg(TransportMode.car)); // TODO Potentially change later
 
-//    		SimpleFeature workFeature = zoneFeatureMap.get(workZoneId);
-//			//TODO remove getRandomCoordinate when implementing microlocation
-//    		Coord workCoordinates = SiloMatsimUtils.getRandomCoordinateInGeometry(workFeature);
-//    		Activity activity2 = matsimPopulationFactory.createActivityFromCoord("work", workCoordinates);
     		Activity activity2 = matsimPopulationFactory.createActivityFromCoord("work", jobCoord);
     		activity2.setEndTime(15 * 3600 + 3 * SiloUtil.getRandomNumberAsDouble() * 3600); // TODO Potentially change later
     		matsimPlan.addActivity(activity2);
     		matsimPlan.addLeg(matsimPopulationFactory.createLeg(TransportMode.car)); // TODO Potentially change later
 
-//    		Activity activity3 = matsimPopulationFactory.createActivityFromCoord("home", homeCoordinates);
     		Activity activity3 = matsimPopulationFactory.createActivityFromCoord("home", dwellingCoord);
-
     		matsimPlan.addActivity(activity3);
     	}
     	LOG.info("Finished creating a MATSim population.");
     	return matsimPopulation;
     }
-	
-//	public static final Coord getRandomCoordinateInGeometry(SimpleFeature feature) {
-//		Geometry geometry = (Geometry) feature.getDefaultGeometry();
-//		Envelope envelope = geometry.getEnvelopeInternal();
-//		while (true) {
-//			Point point = getRandomPointInEnvelope(envelope);
-//			if (point.within(geometry)) {
-//				return new Coord(point.getX(), point.getY());
-//			}
-//		}
-//	}
-	
-//	public static final Point getRandomPointInEnvelope(Envelope envelope) {
-//		double x = envelope.getMinX() + SiloUtil.getRandomNumberAsDouble() * envelope.getWidth();
-//		double y = envelope.getMinY() + SiloUtil.getRandomNumberAsDouble() * envelope.getHeight();
-//		return geometryFactory.createPoint(new Coordinate(x,y));
-//	}
 	
 	public static final Matrix convertTravelTimesToImpedanceMatrix(
 			Map<Tuple<Integer, Integer>, Float> travelTimesMap, int rowCount, int columnCount, int year) {
@@ -260,7 +225,6 @@ public class SiloMatsimUtils {
 				ymax = y;
 			}
 		}
-		LOG.warn("xmin = " + xmin + "; xmax = " + xmax + "; ymin = " + ymin + "; ymax = " + ymax);
+		LOG.info("Extent of facilities is: xmin = " + xmin + "; xmax = " + xmax + "; ymin = " + ymin + "; ymax = " + ymax);
 	}
-
 }
