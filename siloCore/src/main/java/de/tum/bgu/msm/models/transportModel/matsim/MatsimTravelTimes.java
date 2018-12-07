@@ -39,6 +39,10 @@ public final class MatsimTravelTimes implements TravelTimes {
 	private final static int NUMBER_OF_CALC_POINTS = 1;
 	private final Map<Id<Node>, Map<Double, Map<Id<Node>, LeastCostPathTree.NodeData>>> treesForNodesByTimes = new HashMap<>();
 	
+	//
+	Map<Integer, Zone> zones;
+	//
+	
 	enum TimeSlices{night, earlyMorning, morningPeak, lateMorning, midday, afternoonPeak, earlyEvening, lateEvening} // 0-5, 5-8, 8-10, 10-12, 12-16, 16-19, 19-22, 22-0
 	private final Map<Id<Node>, Map<TimeSlices, Map<Id<Node>, LeastCostPathTree.NodeData>>> treesForNodesByTimeSlices = new HashMap<>();
 
@@ -51,13 +55,16 @@ public final class MatsimTravelTimes implements TravelTimes {
 		this.tripRouter = tripRouter;
 		this.leastCoastPathTree = leastCoastPathTree;
 		this.treesForNodesByTimes.clear();
-		TravelTimeUtil.updateTransitSkim(delegate,
-				Properties.get().main.startYear, Properties.get());
+//		TravelTimeUtil.updateTransitSkim(delegate,
+//				Properties.get().main.startYear, Properties.get());
 	}
 
-	public void initialize(Collection<Zone> zones, Network network) {
+	public void initialize(Map<Integer, Zone> zones, Network network) {
 		this.network = network;
-		for (Zone zone : zones) {
+		//
+		this.zones = zones;
+		//
+		for (Zone zone : zones.values()) {
             for (int i = 0; i < NUMBER_OF_CALC_POINTS; i++) { // Several points in a given origin zone
             	Coordinate coordinate = zone.getRandomCoordinate();
 				Coord originCoord = new Coord(coordinate.x, coordinate.y);
@@ -116,7 +123,17 @@ public final class MatsimTravelTimes implements TravelTimes {
 			switch (mode) {
 				case TransportMode.car:
 					double sumTravelTime_min = 0.;
-					Coord originCoord = CoordUtils.createCoord(((MicroLocation) origin).getCoordinate());
+					//
+					Coordinate coordinate = null;
+					if (Properties.get().main.useMicrolocation) {
+						coordinate = ((MicroLocation) origin).getCoordinate();
+					} else{
+						LOG.warn("Use random coordinate."); // TODO
+						coordinate = zones.get(origin.getZoneId()).getRandomCoordinate();
+					}
+					Coord originCoord = CoordUtils.createCoord(coordinate);
+			        //
+//					Coord originCoord = CoordUtils.createCoord(((MicroLocation) origin).getCoordinate());
 					Coord destinationCoord = CoordUtils.createCoord(((MicroLocation) destination).getCoordinate());
 		
 					// TODO take care of network access
