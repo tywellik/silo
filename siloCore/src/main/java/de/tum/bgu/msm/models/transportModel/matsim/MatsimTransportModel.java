@@ -87,7 +87,7 @@ public final class MatsimTransportModel implements TransportModelI  {
 		this.accessibility = accessibility;
 		network = NetworkUtils.createNetwork();
 		new MatsimNetworkReader(network).readFile(matsimConfig.network().getInputFileURL(matsimConfig.getContext()).getFile());
-		travelTimes.initialize(dataContainer.getGeoData().getZones().values(), network);
+		travelTimes.initialize(dataContainer.getGeoData().getZones(), network);
 	}
 
 	@Override
