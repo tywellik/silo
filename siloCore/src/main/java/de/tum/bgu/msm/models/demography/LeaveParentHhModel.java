@@ -65,9 +65,9 @@ public class LeaveParentHhModel extends AbstractModel implements MicroEventModel
     private void setupLPHModel() {
         Reader reader;
         if (Properties.get().main.implementation == Implementation.MUNICH) {
-            reader = new InputStreamReader(this.getClass().getResourceAsStream("LeaveParentHhCalcMstm"));
-        } else {
             reader = new InputStreamReader(this.getClass().getResourceAsStream("LeaveParentHhCalcMuc"));
+        } else {
+            reader = new InputStreamReader(this.getClass().getResourceAsStream("LeaveParentHhCalcMstm"));
         }
         calculator = new LeaveParentHhJSCalculator(reader);
     }

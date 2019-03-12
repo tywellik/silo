@@ -65,6 +65,11 @@ public class SiloDataContainer {
                 geoData = new GeoDataMstm();
                 schoolData = null;
                 break;
+            case AUSTIN:
+            	// to do: this might need to be replaced by GeoDataAustin
+            	geoData = new GeoDataMstm();
+            	schoolData = null;
+            	break;
             default:
                 LOGGER.error(implementation + " is an invalid implementation. Choose <MSTM> or <Muc>.");
                 throw new RuntimeException("Invalid implementation. Choose <MSTM> or <Muc>.");
@@ -98,6 +103,11 @@ public class SiloDataContainer {
                 geoData = new GeoDataMuc();
                 schoolData = new SchoolDataManager(this);
                 break;
+            case AUSTIN:
+            	// to do: this might need to be replaced by GeoDataAustin
+            	geoData = new GeoDataMstm();
+            	schoolData = null;
+            	break;
             default:
                 LOGGER.error("Invalid implementation. Choose <MSTM> or <Muc>.");
                 throw new RuntimeException("Invalid implementation. Choose <MSTM> or <Muc>.");
